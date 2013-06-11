@@ -11,3 +11,5 @@ libraryDependencies ++= Seq(
     "com.google.protobuf" %  "protobuf-java" % "2.5.0",
     "org.scalatest"       %% "scalatest"     % "2.0.M6-SNAP8" % "test"
 )
+
+fork := true
