@@ -146,11 +146,13 @@ class Helper[C <: Context](val c: C) {
     }
 
   // Misc
-  def writeEmbeddedMessageTagAndSize(out: c.Expr[CodedOutputStream], number: c.Expr[Int], size: c.Expr[Int]): c.Expr[Unit] =
-    reify {
+  def writeEmbeddedMessageTagAndSize(out: c.Expr[CodedOutputStream], number: c.Expr[Int], size: c.Expr[Int]): List[c.Expr[Unit]] =
+    List(reify {
       out.splice.writeTag(number.splice, WireFormat.WIRETYPE_LENGTH_DELIMITED)
+    },
+    reify {
       out.splice.writeRawVarint32(size.splice)
-    }
+    })
 
   def value(obj: c.Expr[Any], f: mm.Field): c.Expr[Any] = c.Expr(c.universe.Select(obj.tree, f.getter))
   def toExpr[V](v: V): c.Expr[V] = c.Expr[V](Literal(Constant(v)))
@@ -166,17 +168,17 @@ class Helper[C <: Context](val c: C) {
       repeated(value(obj, f).asInstanceOf[c.Expr[Seq[Any]]], exprF)
     }
     case em: mm.EmbeddedMessage => {
-      val exprF: c.Expr[Any] => c.Expr[Unit] = e => serializeEmbeddedMessage(em, e, out)
+      val exprF: c.Expr[Any] => c.Expr[Unit] = e => c.Expr(Block(serializeEmbeddedMessage(em, e, out).map(_.tree), Literal(Constant(()))))
       if (em.optional) optional(value(obj, f).asInstanceOf[c.Expr[Option[Any]]], exprF)
       else exprF(value(obj, em))
     }
     case rm: mm.RepeatedMessage => {
-      val exprF: c.Expr[Any] => c.Expr[Unit] = e => serializeEmbeddedMessage(rm, e, out)
+      val exprF: c.Expr[Any] => c.Expr[Unit] = e => c.Expr(Block(serializeEmbeddedMessage(rm, e, out).map(_.tree), Literal(Constant(()))))
       repeated(value(obj, rm).asInstanceOf[c.Expr[Seq[Any]]], exprF)
     }
   }
 
-  def serializeEmbeddedMessage(m: mm.MessageField, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): c.Expr[Unit] = {
+  def serializeEmbeddedMessage(m: mm.MessageField, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): List[c.Expr[Unit]] = {
     // 1. Write fields
     val writeFields = serializeMessage(m, obj, out)
     // 2. Compute size
@@ -184,12 +186,12 @@ class Helper[C <: Context](val c: C) {
     // 3. Write tag and size
     val writeTagAndSize = writeEmbeddedMessageTagAndSize(out, toExpr(m.number), size)
     // 4. Combine
-    reify { writeTagAndSize.splice; writeFields.splice }
+    writeTagAndSize ++ writeFields
   }
 
-  def serializeMessage(m: mm.Message, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): c.Expr[Unit] = {
+  def serializeMessage(m: mm.Message, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): List[c.Expr[Unit]] = {
     require(m.fields.size > 0, s"Message ${m.messageName} has no fields. Messages must contain at least one field")
-    m.fields.map(serializeField(obj, _, out)).reduce((f1, f2) => reify { f1.splice; f2.splice })
+    m.fields.map(serializeField(obj, _, out)).to[List]
   }
 
   def messageSize(m: mm.Message, obj: c.Expr[Any]): c.Expr[Int] = {

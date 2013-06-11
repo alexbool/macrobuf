@@ -13,7 +13,11 @@ object Macros {
     val helper = new Helper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
-    val fs = helper.serializeMessage(rm, c.Expr[T](Ident(newTermName("obj"))), c.Expr[CodedOutputStream](Ident(newTermName("output"))))
+    val fs = c.Expr(
+      Block(helper.serializeMessage(rm, c.Expr[T](Ident(newTermName("obj"))),
+        c.Expr[CodedOutputStream](Ident(newTermName("output"))))
+        .map(_.tree),
+        Literal(Constant(()))))
     println(fs)
 
     val resultingSerializer = reify {
@@ -33,7 +37,11 @@ object Macros {
     val helper = new Helper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
-    val fs = helper.serializeMessage(rm, c.Expr[T](Ident(newTermName("obj"))), c.Expr[CodedOutputStream](Ident(newTermName("output"))))
+    val fs = c.Expr(
+      Block(helper.serializeMessage(rm, c.Expr[T](Ident(newTermName("obj"))),
+        c.Expr[CodedOutputStream](Ident(newTermName("output"))))
+        .map(_.tree),
+        Literal(Constant(()))))
     val ms = helper.messageSize(rm, c.Expr[T](Ident(newTermName("obj"))))
     println(fs)
     println(ms)
