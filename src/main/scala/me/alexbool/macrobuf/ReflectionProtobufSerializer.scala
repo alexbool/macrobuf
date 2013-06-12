@@ -39,12 +39,12 @@ class ReflectionMessageSerializer(message: Message) extends MessageSerializier {
   }
 
   private def serializerForField(f: Field) = (f match {
-    case f: Primitive         => if (f.optional) FieldSerializers.optional(serializerForPrimitive(f.actualType))
-                                 else serializerForPrimitive(f.actualType)
-    case f: RepeatedPrimitive => FieldSerializers.repeated(serializerForPrimitive(f.actualType))
-    case f: EmbeddedMessage   => if (f.optional) FieldSerializers.optional(new ReflectionMessageSerializer(f))
-                                 else new ReflectionMessageSerializer(f)
-    case f: RepeatedMessage   => FieldSerializers.repeated(new ReflectionMessageSerializer(f))
+    case f: Primitive if f.optional        => FieldSerializers.optional(serializerForPrimitive(f.actualType))
+    case f: Primitive if !f.optional       => serializerForPrimitive(f.actualType)
+    case f: RepeatedPrimitive              => FieldSerializers.repeated(serializerForPrimitive(f.actualType))
+    case f: EmbeddedMessage if f.optional  => FieldSerializers.optional(new ReflectionMessageSerializer(f))
+    case f: EmbeddedMessage if !f.optional => new ReflectionMessageSerializer(f)
+    case f: RepeatedMessage                => FieldSerializers.repeated(new ReflectionMessageSerializer(f))
   }).asInstanceOf[FieldSerializer[Any]]
 
   private def serializerForPrimitive(tpe: Type) = (tpe match {
