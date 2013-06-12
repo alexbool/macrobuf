@@ -26,8 +26,8 @@ object Benchmark extends App {
   println("Generating data...")
   val data = generate(10000)
 
-  val reflectionSerializer = Protobuf.serializerForList[BenchmarkMessage]
-  val macroSerializer      = Protobuf.macroSerializerForList[BenchmarkMessage]
+  val reflectionSerializer = Protobuf.listSerializer[BenchmarkMessage]
+  val macroSerializer      = Protobuf.listMacroSerializer[BenchmarkMessage]
 
   println("Reflection")
   run(data, reflectionSerializer)
