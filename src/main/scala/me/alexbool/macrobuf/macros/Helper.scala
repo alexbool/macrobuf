@@ -199,25 +199,21 @@ class Helper[C <: Context](val c: C) {
     // 2. Sum them
     m.fields
       .map(f => f match {
-      case f: mm.Primitive => {
-        if (f.optional) {
+      case f: mm.Primitive if f.optional => {
           val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
             sizeOfPrimitive(f.actualType)(toExpr(f.number), c.Expr[f.actualType.type](Ident(newTermName("m")))).tree)
           val mappedOption = mapOption[f.actualType.type, Int](value(obj, f).asInstanceOf[c.Expr[Option[f.actualType.type]]], c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
-        }
-        else sizeOfPrimitive(f.actualType)(toExpr(f.number), value(obj, f))
       }
+      case f: mm.Primitive if !f.optional => sizeOfPrimitive(f.actualType)(toExpr(f.number), value(obj, f))
       case f: mm.RepeatedPrimitive => sizeOfRepeatedPrimitive(f.actualType)(toExpr(f.number), value(obj, f).asInstanceOf[c.Expr[Iterable[Any]]])
-      case f: mm.EmbeddedMessage => {
-        if (f.optional) {
+      case f: mm.EmbeddedMessage if f.optional => {
           val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
             messageSizeWithTag(f, c.Expr[f.actualType.type](Ident(newTermName("m")))).tree)
           val mappedOption = mapOption[f.actualType.type, Int](value(obj, f).asInstanceOf[c.Expr[Option[f.actualType.type]]], c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
-        }
-        else messageSizeWithTag(f, value(obj, f))
       }
+      case f: mm.EmbeddedMessage if !f.optional => messageSizeWithTag(f, value(obj, f))
       case f: mm.RepeatedMessage => {
         val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
           messageSizeWithTag(f, c.Expr[f.thisType.type](Ident(newTermName("m")))).tree)
