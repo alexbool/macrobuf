@@ -5,7 +5,6 @@ import scala.reflect.api.Universe
 class MessageMetadata[U <: Universe](val u: U) {
   import u._
   import u.definitions._
-  import ReflectionUtils._
 
   type Getter = MethodSymbol
 
@@ -73,15 +72,13 @@ class MessageMetadata[U <: Universe](val u: U) {
     else                                  EmbeddedMessage(number, getter, fieldsFor(tpe), optional = false)
   }
 
-  object ReflectionUtils {
-    def isPrimitive(tpe: Type): Boolean = tpe <:< AnyValTpe || tpe <:< typeOf[String]
+  private def isPrimitive(tpe: Type): Boolean = tpe <:< AnyValTpe || tpe <:< typeOf[String]
 
-    def typeArguments(tpe: Type) = tpe match {
-      case TypeRef(_, _, args) => args
-    }
-
-    def firstTypeArgument(tpe: Type): Type = typeArguments(tpe).head
+  private def typeArguments(tpe: Type) = tpe match {
+    case TypeRef(_, _, args) => args
   }
+
+  private def firstTypeArgument(tpe: Type): Type = typeArguments(tpe).head
 }
 
 object MessageMetadata {
