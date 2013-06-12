@@ -6,6 +6,7 @@ import scala.reflect.runtime.universe._
 
 trait ProtobufSerializerSpec extends WordSpec with MustMatchers {
 
+  def name: String
   def serializerForMessage1: Serializer[Message1]
   def serializerForMessage2: Serializer[Message2]
   def serializerForMessage3: Serializer[Message3]
@@ -15,7 +16,7 @@ trait ProtobufSerializerSpec extends WordSpec with MustMatchers {
   def serializerForMessage7: Serializer[Message7]
   def listSerializerForMessage1: Serializer[Iterable[Message1]]
 
-  "Protobuf serializer" must {
+  name must {
     "serialize flat messages" in {
       val serializer = serializerForMessage1
       // https://developers.google.com/protocol-buffers/docs/encoding#simple
