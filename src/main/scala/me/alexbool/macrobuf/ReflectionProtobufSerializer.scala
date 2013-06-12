@@ -17,7 +17,20 @@ class ReflectionProtobufSerializer[T](tpe: Type) extends Serializer[T] {
   }
 }
 
-class ReflectionMessageSerializer(message: Message) extends MessageSerializier {
+class ListReflectionProtobufSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
+  private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
+
+  def serialize(objs: Iterable[T], output: OutputStream) {
+    val codedOut = CodedOutputStream.newInstance(output)
+    for (obj <- objs) {
+      codedOut.writeRawVarint32(serializer.size(obj))
+      serializer.serialize(obj, codedOut)
+      codedOut.flush()
+    }
+  }
+}
+
+private[macrobuf] class ReflectionMessageSerializer(message: Message) extends MessageSerializier {
 
   private case class FieldAndSerializer(field: Field, serializer: FieldSerializer[Any])
 
@@ -60,18 +73,5 @@ class ReflectionMessageSerializer(message: Message) extends MessageSerializier {
   private def fieldValues(obj: Any) = {
     val im = m.reflect(obj)(ClassTag(m.runtimeClass(message.thisType)))
     message.fields.map(f => im.reflectMethod(f.getter)())
-  }
-}
-
-class ListReflectionProtobufSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
-  private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
-
-  def serialize(objs: Iterable[T], output: OutputStream) {
-    val codedOut = CodedOutputStream.newInstance(output)
-    for (obj <- objs) {
-      codedOut.writeRawVarint32(serializer.size(obj))
-      serializer.serialize(obj, codedOut)
-      codedOut.flush()
-    }
   }
 }
