@@ -7,7 +7,7 @@ import java.io.OutputStream
 import com.google.protobuf.CodedOutputStream
 import MessageMetadata.runtime._
 
-class ReflectionProtobufSerializer[T](tpe: Type) extends Serializer[T] {
+class ReflectionSerializer[T](tpe: Type) extends Serializer[T] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
 
   def serialize(obj: T, output: OutputStream) {
@@ -17,7 +17,7 @@ class ReflectionProtobufSerializer[T](tpe: Type) extends Serializer[T] {
   }
 }
 
-class ListReflectionProtobufSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
+class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
 
   def serialize(objs: Iterable[T], output: OutputStream) {
