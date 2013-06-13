@@ -9,6 +9,9 @@ object Protobuf {
   def serializer[T: TypeTag]: Serializer[T] = new ReflectionSerializer[T](implicitly[TypeTag[T]].tpe)
   def listSerializer[T: TypeTag]: Serializer[Iterable[T]] = new ListReflectionSerializer[T](implicitly[TypeTag[T]].tpe)
 
+  def parser[T: TypeTag]: Parser[T] = new ReflectionParser[T](implicitly[TypeTag[T]].tpe)
+  def listParser[T: TypeTag]: Parser[Seq[T]] = new ListReflectionParser[T](implicitly[TypeTag[T]].tpe)
+
   def serializerFromClass[T](clazz: Class[T]): Serializer[T] =
     new ReflectionSerializer[T](runtimeMirror(clazz.getClassLoader).classSymbol(clazz).selfType)
   def listSerializerFromClass[T](clazz: Class[T]): Serializer[Iterable[T]] =

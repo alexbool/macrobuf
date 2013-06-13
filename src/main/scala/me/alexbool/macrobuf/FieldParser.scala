@@ -35,3 +35,18 @@ object FieldParsers {
     def parse(in: CodedInputStream) = in.readString()
   }
 }
+
+trait MessageParser extends FieldParser[Any] {
+
+  /** Sets limit, then parses using parse(CodedInputStream). Use for embedded messages or length-delimited source */
+  def parse(in: CodedInputStream): Any = {
+    val size = in.readRawVarint32()
+    val oldLimit = in.pushLimit(size)
+    val result = parseUntilLimit(in)
+    in.popLimit(oldLimit)
+    result
+  }
+
+  /** Reads from stream until limit/EOF. Use for single root message per input stream */
+  def parseUntilLimit(in: CodedInputStream): Any
+}
