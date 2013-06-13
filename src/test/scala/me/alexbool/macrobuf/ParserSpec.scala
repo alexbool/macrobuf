@@ -13,7 +13,7 @@ trait ParserSpec extends WordSpec with MustMatchers {
   def parserForMessage5: Parser[Message5]
   def parserForMessage6: Parser[Message6]
   def parserForMessage7: Parser[Message7]
-  def listParserForMessage1: Parser[Iterable[Message1]]
+  def listParserForMessage1: Parser[Seq[Message1]]
 
   name must {
     "parse flat messages" in {
