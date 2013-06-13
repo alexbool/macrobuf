@@ -3,7 +3,7 @@ package me.alexbool.macrobuf
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 
-trait ProtobufParserSpec extends WordSpec with MustMatchers {
+trait ParserSpec extends WordSpec with MustMatchers {
 
   def name: String
   def parserForMessage1: Parser[Message1]

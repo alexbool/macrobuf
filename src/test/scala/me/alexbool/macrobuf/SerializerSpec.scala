@@ -4,7 +4,7 @@ import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import scala.reflect.runtime.universe._
 
-trait ProtobufSerializerSpec extends WordSpec with MustMatchers {
+trait SerializerSpec extends WordSpec with MustMatchers {
 
   def name: String
   def serializerForMessage1: Serializer[Message1]

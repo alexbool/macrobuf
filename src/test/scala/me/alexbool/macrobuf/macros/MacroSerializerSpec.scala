@@ -2,7 +2,7 @@ package me.alexbool.macrobuf.macros
 
 import me.alexbool.macrobuf._
 
-class MacroProtobufSerializerSpec extends ProtobufSerializerSpec {
+class MacroSerializerSpec extends SerializerSpec {
   def name = "Macro protobuf serializer"
   def serializerForMessage1 = Protobuf.macroSerializer[Message1]
   def serializerForMessage2 = Protobuf.macroSerializer[Message2]

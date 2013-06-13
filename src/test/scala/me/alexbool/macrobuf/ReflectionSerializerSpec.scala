@@ -1,6 +1,6 @@
 package me.alexbool.macrobuf
 
-class ReflectionProtobufSerializerSpec extends ProtobufSerializerSpec {
+class ReflectionSerializerSpec extends SerializerSpec {
   def name = "Reflection protobuf serializer"
   def serializerForMessage1 = Protobuf.serializer[Message1]
   def serializerForMessage2 = Protobuf.serializer[Message2]
