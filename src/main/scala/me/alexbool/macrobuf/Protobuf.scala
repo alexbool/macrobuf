@@ -17,6 +17,11 @@ object Protobuf {
   def listSerializerFromClass[T](clazz: Class[T]): Serializer[Iterable[T]] =
     new ListReflectionSerializer[T](runtimeMirror(clazz.getClassLoader).classSymbol(clazz).selfType)
 
+  def parserFromClass[T](clazz: Class[T]): Parser[T] =
+    new ReflectionParser[T](runtimeMirror(clazz.getClassLoader).classSymbol(clazz).selfType)
+  def listParserFromClass[T](clazz: Class[T]): Parser[Seq[T]] =
+    new ListReflectionParser[T](runtimeMirror(clazz.getClassLoader).classSymbol(clazz).selfType)
+
   def macroSerializer[T]: Serializer[T] = macro Macros.serializer[T]
   def listMacroSerializer[T]: Serializer[Iterable[T]] = macro Macros.listSerializer[T]
 }
