@@ -18,13 +18,16 @@ object Benchmark extends App {
 
   def run[T](data: Seq[T], serializer: Serializer[Iterable[T]]) {
     val start = System.currentTimeMillis
-    serializer.serialize(data)
+    val serialized = serializer.serialize(data)
     val end = System.currentTimeMillis
-    println(s"Took ${end - start} millis")
+    val duration = end - start
+    println(f"Took $duration millis at ${serialized.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
   }
 
   println("Generating data...")
   val data = generate(10000)
+  println(s"Successfully generated ${data.size} items")
+  println()
 
   val reflectionSerializer = Protobuf.listSerializer[BenchmarkMessage]
   val macroSerializer      = Protobuf.listMacroSerializer[BenchmarkMessage]
