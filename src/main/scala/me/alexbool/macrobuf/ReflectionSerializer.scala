@@ -32,10 +32,10 @@ class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
 
 private[macrobuf] class ReflectionMessageSerializer(message: Message) extends MessageSerializier {
 
-  private case class FieldAndSerializer(field: Field, serializer: FieldSerializer[Any])
+  private class FieldAndSerializer(val field: Field, val serializer: FieldSerializer[Any])
 
   private val fieldSerializers: Seq[FieldAndSerializer] =
-    message.fields.map(f => FieldAndSerializer(f, serializerForField(f)))
+    message.fields.map(f => new FieldAndSerializer(f, serializerForField(f)))
 
   private val m = runtimeMirror(getClass.getClassLoader)
 
