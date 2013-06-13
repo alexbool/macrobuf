@@ -16,12 +16,21 @@ object Benchmark extends App {
       repeated = Stream.continually(Random.alphanumeric.take(32).mkString).take(Random.nextInt(100)).to[Seq],
       embedded = Stream.continually(Embedded(fieldOne = Random.nextInt(), fieldTwo = Random.nextLong())).take(Random.nextInt(100)).to[Seq])
 
-  def run[T](data: Seq[T], serializer: Serializer[Iterable[T]]) {
+  def serialize[T](data: Seq[T], serializer: Serializer[Iterable[T]]) = {
     val start = System.currentTimeMillis
     val serialized = serializer.serialize(data)
     val end = System.currentTimeMillis
     val duration = end - start
     println(f"Took $duration millis at ${serialized.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
+    serialized
+  }
+
+  def parse[T](data: Array[Byte], parser: Parser[Seq[T]]) {
+    val start = System.currentTimeMillis
+    parser.parse(data)
+    val end = System.currentTimeMillis
+    val duration = end - start
+    println(f"Took $duration millis at ${data.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
   }
 
   println("Generating data...")
@@ -31,9 +40,15 @@ object Benchmark extends App {
 
   val reflectionSerializer = Protobuf.listSerializer[BenchmarkMessage]
   val macroSerializer      = Protobuf.listMacroSerializer[BenchmarkMessage]
+  val reflectionParser     = Protobuf.listParser[BenchmarkMessage]
 
+  println("----Serialization----")
   println("Reflection")
-  run(data, reflectionSerializer)
+  val serialized = serialize(data, reflectionSerializer)
   println("Macro")
-  run(data, macroSerializer)
+  serialize(data, macroSerializer)
+
+  println("-------Parsing-------")
+  println("Reflection")
+  parse(serialized, reflectionParser)
 }
