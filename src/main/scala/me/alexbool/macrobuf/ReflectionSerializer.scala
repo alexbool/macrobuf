@@ -38,6 +38,7 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
     message.fields.map(f => new FieldAndSerializer(f, serializerForField(f)))
 
   private val m = runtimeMirror(getClass.getClassLoader)
+  private val ct = ClassTag[Any](m.runtimeClass(message.thisType))
 
   def serialize(value: Any, out: CodedOutputStream) {
     val values = fieldValues(value)
@@ -71,7 +72,7 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
   }).asInstanceOf[FieldSerializer[Any]]
 
   private def fieldValues(obj: Any) = {
-    val im = m.reflect(obj)(ClassTag(m.runtimeClass(message.thisType)))
+    val im = m.reflect(obj)(ct)
     message.fields.map(f => im.reflectMethod(f.getter)())
   }
 }
