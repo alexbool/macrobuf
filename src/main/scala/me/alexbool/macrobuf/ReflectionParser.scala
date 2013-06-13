@@ -73,7 +73,6 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
       fieldValuesByNumber += ((number, fieldAndParsersByNumber(number).parser.parse(in)))
     }
     val preparedArguments = prepareArguments(fieldValuesByNumber)
-    println(preparedArguments)
     ctorMirror(preparedArguments:_*)
   }
 
