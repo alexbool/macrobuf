@@ -4,7 +4,7 @@ import scala.reflect.macros.Context
 import com.google.protobuf.{WireFormat, CodedOutputStream}
 import me.alexbool.macrobuf.MessageMetadata
 
-class Helper[C <: Context](val c: C) {
+class SerializierHelper[C <: Context](val c: C) {
 
   import c.universe._
 

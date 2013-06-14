@@ -10,7 +10,7 @@ object Macros {
     import c.universe._
 
     val tt = implicitly[c.WeakTypeTag[T]]
-    val helper = new Helper[c.type](c)
+    val helper = new SerializierHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
     val fs = c.Expr(
@@ -34,7 +34,7 @@ object Macros {
     import c.universe._
 
     val tt = implicitly[c.WeakTypeTag[T]]
-    val helper = new Helper[c.type](c)
+    val helper = new SerializierHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
     val fs = c.Expr(
