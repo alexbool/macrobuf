@@ -3,6 +3,7 @@ package me.alexbool.macrobuf.macros
 import me.alexbool.macrobuf.Parser
 import java.io.InputStream
 import com.google.protobuf.CodedInputStream
+
 trait MacroParserBase[T] extends Parser[T] {
   def parse(input: InputStream): T = {
      val codedIn = CodedInputStream.newInstance(input)
