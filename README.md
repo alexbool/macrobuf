@@ -19,7 +19,7 @@ How to use it?
 --------------
 Short answer: __don't use it__. It's not ready for production at the moment.
 
-Long answer:
+Long answer (well, not that long. More to come):
 ```scala
 import me.alexbool.macrobuf.Protobuf
 
