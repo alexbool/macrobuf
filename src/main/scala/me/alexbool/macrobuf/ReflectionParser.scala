@@ -53,7 +53,7 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
   }
 
   private def parserForPrimitive(tpe: Type): FieldParser[Any] = {
-    val parser =
+    val parser: FieldParser[_] =
       if      (tpe =:= IntTpe)          FieldParsers.IntParser
       else if (tpe =:= LongTpe)         FieldParsers.LongParser
       else if (tpe =:= ShortTpe)        FieldParsers.ShortParser

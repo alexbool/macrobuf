@@ -62,7 +62,7 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
   }).asInstanceOf[FieldSerializer[Any]]
 
   private def serializerForPrimitive(tpe: Type) = {
-    val serializer =
+    val serializer: FieldSerializer[_] =
       if      (tpe =:= IntTpe)         FieldSerializers.IntSerializer
       else if (tpe =:= LongTpe)        FieldSerializers.LongSerializer
       else if (tpe =:= ShortTpe)       FieldSerializers.ShortSerializer
