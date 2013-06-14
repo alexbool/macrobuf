@@ -61,15 +61,18 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
     case f: RepeatedMessage                => FieldSerializers.repeated(new ReflectionMessageSerializer(f))
   }).asInstanceOf[FieldSerializer[Any]]
 
-  private def serializerForPrimitive(tpe: Type) = (tpe match {
-    case IntTpe                      => FieldSerializers.IntSerializer
-    case LongTpe                     => FieldSerializers.LongSerializer
-    case ShortTpe                    => FieldSerializers.ShortSerializer
-    case BooleanTpe                  => FieldSerializers.BooleanSerializer
-    case FloatTpe                    => FieldSerializers.FloatSerializer
-    case DoubleTpe                   => FieldSerializers.DoubleSerializer
-    case _ if tpe =:= typeOf[String] => FieldSerializers.StringSerializer
-  }).asInstanceOf[FieldSerializer[Any]]
+  private def serializerForPrimitive(tpe: Type) = {
+    val serializer =
+      if      (tpe =:= IntTpe)         FieldSerializers.IntSerializer
+      else if (tpe =:= LongTpe)        FieldSerializers.LongSerializer
+      else if (tpe =:= ShortTpe)       FieldSerializers.ShortSerializer
+      else if (tpe =:= BooleanTpe)     FieldSerializers.BooleanSerializer
+      else if (tpe =:= FloatTpe)       FieldSerializers.FloatSerializer
+      else if (tpe =:= DoubleTpe)      FieldSerializers.DoubleSerializer
+      else if (tpe =:= typeOf[String]) FieldSerializers.StringSerializer
+      else throw new IllegalArgumentException("Unknown primitive type")
+    serializer.asInstanceOf[FieldSerializer[Any]]
+  }
 
   private def fieldValues(obj: Any) = {
     val im = m.reflect(obj)(ct)
