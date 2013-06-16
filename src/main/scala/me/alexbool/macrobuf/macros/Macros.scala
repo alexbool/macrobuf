@@ -2,7 +2,7 @@ package me.alexbool.macrobuf.macros
 
 import scala.reflect.macros.Context
 import me.alexbool.macrobuf._
-import com.google.protobuf.CodedOutputStream
+import com.google.protobuf.{CodedInputStream, CodedOutputStream}
 
 object Macros {
 
@@ -56,5 +56,22 @@ object Macros {
       }
     }
     resultingSerializer
+  }
+
+  def parser[T: c.WeakTypeTag](c: Context): c.Expr[Parser[T]] = {
+    import c.universe._
+
+    val tt = implicitly[c.WeakTypeTag[T]]
+    val helper = new ParserHelper[c.type](c)
+    val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
+
+    val resultingParser = reify {
+      new MacroParserBase[T] {
+        protected def parse(input: CodedInputStream) = {
+          ???
+        }
+      }
+    }
+    resultingParser
   }
 }
