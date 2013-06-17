@@ -40,9 +40,37 @@ class ParserHelper[C <: Context](val c: C) {
     // 2. Loop while !in.isAtEnd(): read tag, decode field number and type
     // 3. Pattern match on number
     // 4. Require wire type matches field metadata, throw exception if needed
-    // 5. Read value from loop
+    // 5. Read value from loop and assign it to the matching var declared at step 1
     // 6. Go to step 2
-    // 7.
+    // 7. Check that all required fields are provided
+    // 8. Construct message
+    // 9. PROFIT!!!
+    val varDefs = declareVars(m)
+    val varDefsExprs = varDefs.values.map(c.Expr(_))
     ???
   }
+
+  private def declareVars(m: mm.Message): Map[mm.Field, ValDef] = {
+    def varDefForField(f: mm.Field): ValDef = {
+      val tpt: Tree = TypeTree(f match {
+        case f: mm.Scalar   => typeOf[Option[f.actualType.type]]
+        case f: mm.Repeated => f.getter.returnType
+      })
+      val rhs: Tree = f match {
+        case f: mm.Scalar   => reify { None  }.tree
+        case f: mm.Repeated => reify { Seq() }.tree
+      }
+      ValDef(Modifiers(Flag.MUTABLE), newTermName(f.fieldName), tpt, rhs)
+    }
+    m.fields.map(f => (f, varDefForField(f))).toMap
+  }
+
+  private def patternMatchOnFieldNumber(varDefs: Map[mm.Field, ValDef]): Match = {
+    val cases: List[CaseDef] = varDefs.to[List].map(fieldAndVar => {
+      CaseDef(Literal(Constant(fieldAndVar._1.number)), EmptyTree, readField(fieldAndVar._1, fieldAndVar._2))
+    })
+    Match(Ident(newTermName("number")), cases)
+  }
+
+  private def readField(f: mm.Field, readIntoVar: ValDef): Tree = ???
 }
