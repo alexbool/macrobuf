@@ -37,14 +37,8 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
 
   private val ctorMirror = {
     val rm = runtimeMirror(getClass.getClassLoader)
-    // XXX Maybe add val actualType to Message which is same as thisType?
-    val actualType = message match {
-      case m: MessageField => m.actualType
-      case _               => message.thisType
-    }
-    val cm = rm.reflectClass(rm.classSymbol(rm.runtimeClass(actualType)))
-    val ctor = actualType.declaration(nme.CONSTRUCTOR).asMethod
-    cm.reflectConstructor(ctor)
+    val cm = rm.reflectClass(rm.classSymbol(rm.runtimeClass(message.actualType)))
+    cm.reflectConstructor(message.ctor)
   }
 
   private def parserForField(f: Field): FieldParser[Any] = f match {
