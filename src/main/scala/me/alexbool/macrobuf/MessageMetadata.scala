@@ -11,12 +11,12 @@ class MessageMetadata[U <: Universe](val u: U) {
   sealed trait Object {
     def thisType: Type
     def actualType: Type = thisType
-    def ctor: MethodSymbol = actualType.declaration(nme.CONSTRUCTOR).asMethod
   }
 
   sealed trait Message extends Object {
     def fields: Seq[Field]
     def messageName: String
+    def ctor: MethodSymbol = actualType.declaration(nme.CONSTRUCTOR).asMethod
   }
 
   case class RootMessage private[MessageMetadata] (messageName: String, fields: Seq[Field], thisType: Type) extends Message
