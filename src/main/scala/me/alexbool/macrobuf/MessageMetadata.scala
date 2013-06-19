@@ -8,23 +8,25 @@ class MessageMetadata[U <: Universe](val u: U) {
 
   type Getter = MethodSymbol
 
-  sealed trait Message {
+  sealed trait Object {
+    def thisType: Type
+    def actualType: Type = thisType
+    def ctor: MethodSymbol = actualType.declaration(nme.CONSTRUCTOR).asMethod
+  }
+
+  sealed trait Message extends Object {
     def fields: Seq[Field]
     def messageName: String
-
-    /**
-     * @return Scala Type of this message
-     */
-    def thisType: Type
   }
 
   case class RootMessage private[MessageMetadata] (messageName: String, fields: Seq[Field], thisType: Type) extends Message
 
-  sealed trait Field {
+  sealed trait Field extends Object {
     def number: Int
     def getter: Getter
     def fieldName: String = getter.name.decoded
-    val actualType = {
+    val thisType = getter.returnType
+    override val actualType = {
       val tpe = getter.returnType
       if (tpe <:< typeOf[Option[_]] || tpe <:< typeOf[Iterable[_]]) firstTypeArgument(tpe)
       else tpe
@@ -37,7 +39,6 @@ class MessageMetadata[U <: Universe](val u: U) {
 
   sealed trait MessageField extends Field with Message {
     def messageName = actualType.typeSymbol.name.decoded
-    val thisType = getter.returnType
   }
 
   case class Primitive private[macrobuf] (number: Int, getter: Getter, optional: Boolean = false) extends Scalar
