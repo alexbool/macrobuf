@@ -82,7 +82,7 @@ object Macros {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
-    val parseExpr = helper.parseEmbeddedMessage(rm, c.Expr[CodedInputStream](Ident(newTermName("input")))).asInstanceOf[c.Expr[T]]
+    val parseExpr = helper.parseDelimited(rm, c.Expr[CodedInputStream](Ident(newTermName("input")))).asInstanceOf[c.Expr[T]]
     println(parseExpr)
 
     val resultingParser = reify {
