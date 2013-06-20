@@ -60,10 +60,7 @@ class ParserHelper[C <: Context](val c: C) {
     val varDefsTree = Block(varDefs.values.to[List], Literal(Constant(())))
     val tag = c.Expr[Int](Ident(newTermName("tag")))
     val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
-    val checkAllRequiredFieldsAreProvidedExprs = checkAllRequiredFieldsAreProvided(varDefs)
-    val checkAllRequiredFieldsAreProvidedExpr: c.Expr[Unit] =
-      if (checkAllRequiredFieldsAreProvidedExprs.isEmpty) reify { }
-      else checkAllRequiredFieldsAreProvidedExprs.reduce((a, b) => reify { a.splice; b.splice })
+    val checkAllRequiredFieldsAreProvidedStmts = checkAllRequiredFieldsAreProvided(varDefs)
     val constructMessageExpr = constructMessage(m, varDefs)
     val loopTree = reify {
       while (!in.splice.isAtEnd) {
@@ -71,9 +68,8 @@ class ParserHelper[C <: Context](val c: C) {
         val number = WireFormat.getTagFieldNumber(tag)
         matchOnNumber.splice
       }
-      checkAllRequiredFieldsAreProvidedExpr.splice
     }.tree
-    c.Expr(Block(varDefsTree.children :+ loopTree, constructMessageExpr.tree))
+    c.Expr(Block((varDefsTree.children :+ loopTree) ++ checkAllRequiredFieldsAreProvidedStmts, constructMessageExpr.tree))
   }
 
   def parseEmbeddedMessage(m: Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
@@ -118,11 +114,11 @@ class ParserHelper[C <: Context](val c: C) {
     Assign(readIntoVar, fieldValue.tree)
   }
 
-  private def checkAllRequiredFieldsAreProvided(varDefs: Map[Field, ValDef]): List[c.Expr[Unit]] = varDefs.to[List]
+  private def checkAllRequiredFieldsAreProvided(varDefs: Map[Field, ValDef]): List[Tree] = varDefs.to[List]
     .flatMap { fieldAndVar => fieldAndVar._1 match {
         case f: Scalar if !f.optional => Some(reify {
           require(c.Expr[Option[_]](Ident(fieldAndVar._2.name)).splice.isDefined, "Field must be set")
-        })
+        }.tree)
         case _                        => None
       }
     }
