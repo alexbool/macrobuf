@@ -57,7 +57,7 @@ class ParserHelper[C <: Context](val c: C) {
     // 8. Construct message
     // 9. PROFIT!!!
     val varDefs = declareVars(m)
-    val varDefsTree = Block(varDefs.values.to[List], Literal(Constant(())))
+    val varDefsStmts = varDefs.values.to[List]
     val tag = c.Expr[Int](Ident(newTermName("tag")))
     val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
     val checkAllRequiredFieldsAreProvidedStmts = checkAllRequiredFieldsAreProvided(varDefs)
@@ -69,7 +69,7 @@ class ParserHelper[C <: Context](val c: C) {
         matchOnNumber.splice
       }
     }.tree
-    c.Expr(Block((varDefsTree.children :+ loopTree) ++ checkAllRequiredFieldsAreProvidedStmts, constructMessageExpr.tree))
+    c.Expr(Block((varDefsStmts :+ loopTree) ++ checkAllRequiredFieldsAreProvidedStmts, constructMessageExpr.tree))
   }
 
   def parseEmbeddedMessage(m: Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
