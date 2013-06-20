@@ -12,7 +12,7 @@ class ParserHelper[C <: Context](val c: C) {
   import mm._
   import WireFormat._
 
-  def parsePrimitive(tpe: c.Type)(tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
+  private def parsePrimitive(tpe: c.Type)(tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
     import c.universe.definitions._
     if      (tpe =:= IntTpe)         reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readInt(in).splice     }
     else if (tpe =:= LongTpe)        reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readLong(in).splice    }
@@ -25,15 +25,15 @@ class ParserHelper[C <: Context](val c: C) {
   }
 
   // Parsers for primitive types
-  def readInt(in: c.Expr[CodedInputStream]): c.Expr[Int]         = reify { in.splice.readInt32() }
-  def readLong(in: c.Expr[CodedInputStream]): c.Expr[Long]       = reify { in.splice.readInt64() }
-  def readShort(in: c.Expr[CodedInputStream]): c.Expr[Short]     = reify { in.splice.readInt32().asInstanceOf[Short] }
-  def readBoolean(in: c.Expr[CodedInputStream]): c.Expr[Boolean] = reify { in.splice.readBool() }
-  def readFloat(in: c.Expr[CodedInputStream]): c.Expr[Float]     = reify { in.splice.readFloat() }
-  def readDouble(in: c.Expr[CodedInputStream]): c.Expr[Double]   = reify { in.splice.readDouble() }
-  def readString(in: c.Expr[CodedInputStream]): c.Expr[String]   = reify { in.splice.readString() }
+  private def readInt(in: c.Expr[CodedInputStream]): c.Expr[Int]         = reify { in.splice.readInt32() }
+  private def readLong(in: c.Expr[CodedInputStream]): c.Expr[Long]       = reify { in.splice.readInt64() }
+  private def readShort(in: c.Expr[CodedInputStream]): c.Expr[Short]     = reify { in.splice.readInt32().asInstanceOf[Short] }
+  private def readBoolean(in: c.Expr[CodedInputStream]): c.Expr[Boolean] = reify { in.splice.readBool() }
+  private def readFloat(in: c.Expr[CodedInputStream]): c.Expr[Float]     = reify { in.splice.readFloat() }
+  private def readDouble(in: c.Expr[CodedInputStream]): c.Expr[Double]   = reify { in.splice.readDouble() }
+  private def readString(in: c.Expr[CodedInputStream]): c.Expr[String]   = reify { in.splice.readString() }
 
-  def requireWireFormat(tag: c.Expr[Int], wf: Int): c.Expr[Unit] = {
+  private def requireWireFormat(tag: c.Expr[Int], wf: Int): c.Expr[Unit] = {
     val wfExpr = c.Expr[Int](Literal(Constant(wf)))
     reify {
       val actualWf = tag.splice & (1 << 3) - 1 // XXX Kinda hack
@@ -41,7 +41,7 @@ class ParserHelper[C <: Context](val c: C) {
     }
   }
 
-  def parseField(f: Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
+  private def parseField(f: Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
     case _: Primitive | _: RepeatedPrimitive => parsePrimitive(f.actualType)(tag, in)
     case m: MessageField                     => parseDelimited(m, in)
   }
