@@ -18,13 +18,10 @@ trait ListMacroParserBase[T] extends Parser[Seq[T]] {
     val codedIn = CodedInputStream.newInstance(input)
     val buffer = collection.mutable.ListBuffer[T]()
     while (!codedIn.isAtEnd) {
-      val size = codedIn.readRawVarint32()
-      val oldLimit = codedIn.pushLimit(size)
-      buffer += parse(codedIn)
-      codedIn.popLimit(oldLimit)
+      buffer += parseLengthDelimited(codedIn)
     }
     buffer.to[Seq]
   }
 
-  protected def parse(input: CodedInputStream): T
+  protected def parseLengthDelimited(input: CodedInputStream): T
 }

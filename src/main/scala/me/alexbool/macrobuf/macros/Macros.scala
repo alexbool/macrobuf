@@ -76,4 +76,22 @@ object Macros {
     }
     resultingParser
   }
+  def listParser[T: c.WeakTypeTag](c: Context): c.Expr[Parser[Seq[T]]] = {
+    import c.universe._
+
+    val tt = implicitly[c.WeakTypeTag[T]]
+    val helper = new ParserHelper[c.type](c)
+    val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
+    val parseExpr = helper.parseEmbeddedMessage(rm, c.Expr[CodedInputStream](Ident(newTermName("input")))).asInstanceOf[c.Expr[T]]
+    println(parseExpr)
+
+    val resultingParser = reify {
+      new ListMacroParserBase[T] {
+        protected def parseLengthDelimited(input: CodedInputStream) = {
+          parseExpr.splice
+        }
+      }
+    }
+    resultingParser
+  }
 }

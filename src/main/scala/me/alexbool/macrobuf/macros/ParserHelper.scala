@@ -42,7 +42,7 @@ class ParserHelper[C <: Context](val c: C) {
 
   def parseField(f: mm.Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
     case _: mm.Primitive | _: mm.RepeatedPrimitive => parsePrimitive(f.actualType)(tag, in)
-    case m: mm.Message                             => parseMessage(m, in)
+    case m: mm.MessageField                        => parseEmbeddedMessage(m, in)
   }
 
   def parseMessage(m: mm.Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
@@ -74,11 +74,22 @@ class ParserHelper[C <: Context](val c: C) {
     }
   }
 
+  def parseEmbeddedMessage(m: mm.Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
+    val parseMessageExpr = parseMessage(m, in)
+    reify {
+      val size = in.splice.readRawVarint32()
+      val oldLimit = in.splice.pushLimit(size)
+      val result = parseMessageExpr.splice
+      in.splice.popLimit(oldLimit)
+      result
+    }
+  }
+
   private def declareVars(m: mm.Message): Map[mm.Field, ValDef] = {
     def varDefForField(f: mm.Field): ValDef = {
       val tpt: Tree = f match {
         case f: mm.Scalar   => AppliedTypeTree(Ident(newTypeName("Option")), List(TypeTree(f.actualType)))
-        case f: mm.Repeated => TypeTree(f.getter.returnType)
+        case f: mm.Repeated => AppliedTypeTree(Ident(newTypeName("Seq")), List(TypeTree(f.actualType)))
       }
       val rhs: Tree = f match {
         case f: mm.Scalar   => reify { None  }.tree
@@ -123,6 +134,6 @@ class ParserHelper[C <: Context](val c: C) {
       }
     }
     // c.Expr[Any](Apply(Select(m.thisType, Ident(ctor)), args))
-    c.Expr(Apply(Select(New(TypeTree(m.thisType)), nme.CONSTRUCTOR), args))
+    c.Expr(Apply(Select(New(TypeTree(m.actualType)), nme.CONSTRUCTOR), args))
   }
 }
