@@ -14,6 +14,7 @@ trait SerializerSpec extends WordSpec with MustMatchers {
   def serializerForMessage5: Serializer[Message5]
   def serializerForMessage6: Serializer[Message6]
   def serializerForMessage7: Serializer[Message7]
+  def serializerForMessage8: Serializer[Message8]
   def listSerializerForMessage1: Serializer[Iterable[Message1]]
 
   name must {
@@ -50,6 +51,10 @@ trait SerializerSpec extends WordSpec with MustMatchers {
       val serializer = serializerForMessage7
       serializer.serialize(Message7(Some(Message1(150)))) must equal (Array(0x0a, 0x03, 0x08, 0x96, 0x01).map(_.toByte))
       serializer.serialize(Message7(None)) must equal (Array[Byte]())
+    }
+    "serialize messages with several fields" in {
+      val serializer = serializerForMessage8
+      serializer.serialize(Message8(150, "testing")) must equal (Array(0x08, 0x96, 0x01, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67).map(_.toByte))
     }
     "serialize lists of messages using delimeted format" in {
       val serializer = listSerializerForMessage1

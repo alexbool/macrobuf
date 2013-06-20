@@ -11,5 +11,6 @@ class MacroParserSpec extends ParserSpec {
   def parserForMessage5 = Protobuf.macroParser[Message5]
   def parserForMessage6 = Protobuf.macroParser[Message6]
   def parserForMessage7 = Protobuf.macroParser[Message7]
+  def parserForMessage8 = Protobuf.macroParser[Message8]
   def listParserForMessage1 = Protobuf.listMacroParser[Message1]
 }

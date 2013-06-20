@@ -13,6 +13,7 @@ trait ParserSpec extends WordSpec with MustMatchers {
   def parserForMessage5: Parser[Message5]
   def parserForMessage6: Parser[Message6]
   def parserForMessage7: Parser[Message7]
+  def parserForMessage8: Parser[Message8]
   def listParserForMessage1: Parser[Seq[Message1]]
 
   name must {
@@ -49,6 +50,10 @@ trait ParserSpec extends WordSpec with MustMatchers {
       val parser = parserForMessage7
       parser.parse(Array(0x0a, 0x03, 0x08, 0x96, 0x01).map(_.toByte)) must equal (Message7(Some(Message1(150))))
       parser.parse(Array[Byte]()) must equal (Message7(None))
+    }
+    "parse messages with several fields" in {
+      val parser = parserForMessage8
+      parser.parse(Array(0x08, 0x96, 0x01, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67).map(_.toByte)) must equal (Message8(150, "testing"))
     }
     "parse lists of messages using delimeted format" in {
       val parser = listParserForMessage1
