@@ -5,6 +5,7 @@ import scala.reflect.runtime.universe.definitions._
 import java.io.InputStream
 import com.google.protobuf.{CodedInputStream, WireFormat}
 import me.alexbool.macrobuf.{MessageMetadata, Parser}
+import MessageMetadata.runtime._
 
 class ReflectionParser[T](tpe: Type) extends Parser[T] {
   private val parser = new ReflectionMessageParser(MessageMetadata.runtime(tpe))

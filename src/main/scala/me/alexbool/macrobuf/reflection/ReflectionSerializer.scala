@@ -6,6 +6,7 @@ import scala.reflect.ClassTag
 import java.io.OutputStream
 import com.google.protobuf.CodedOutputStream
 import me.alexbool.macrobuf.{MessageMetadata, Serializer}
+import MessageMetadata.runtime._
 
 class ReflectionSerializer[T](tpe: Type) extends Serializer[T] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
