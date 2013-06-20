@@ -16,7 +16,7 @@ object FieldParsers {
   }
 
   val ShortParser = new FieldParser[Short] {
-    def parse(in: CodedInputStream) = in.readInt32().asInstanceOf[Short]
+    def parse(in: CodedInputStream) = in.readInt32().toShort
   }
 
   val BooleanParser = new FieldParser[Boolean] {
