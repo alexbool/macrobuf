@@ -14,6 +14,7 @@ class ParserHelper[C <: Context](val c: C) {
 
   private def parsePrimitive(tpe: c.Type)(tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
     import c.universe.definitions._
+    // XXX Flatten blocks with field type requirement and value reading
     if      (tpe =:= IntTpe)         reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readInt(in).splice     }
     else if (tpe =:= LongTpe)        reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readLong(in).splice    }
     else if (tpe =:= ShortTpe)       reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readShort(in).splice   }
