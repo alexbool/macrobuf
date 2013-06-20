@@ -46,7 +46,7 @@ class ParserHelper[C <: Context](val c: C) {
     case m: MessageField                     => parseDelimited(m, in)
   }
 
-  def parseMessage(m: Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
+  def parseMessage[T](m: Message, in: c.Expr[CodedInputStream]): c.Expr[T] = {
     // 1. Declare vars
     // 2. Loop while !in.isAtEnd(): read tag, decode field number and type
     // 3. Pattern match on number
@@ -61,7 +61,7 @@ class ParserHelper[C <: Context](val c: C) {
     val tag = c.Expr[Int](Ident(newTermName("tag")))
     val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
     val checkAllRequiredFieldsAreProvidedStmts = checkAllRequiredFieldsAreProvided(varDefs)
-    val constructMessageExpr = constructMessage(m, varDefs)
+    val constructMessageExpr = constructMessage[T](m, varDefs)
     val loopTree = reify {
       while (!in.splice.isAtEnd) {
         val tag = in.splice.readTag()
@@ -72,8 +72,8 @@ class ParserHelper[C <: Context](val c: C) {
     c.Expr(Block((varDefsStmts :+ loopTree) ++ checkAllRequiredFieldsAreProvidedStmts, constructMessageExpr.tree))
   }
 
-  def parseDelimited(m: Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
-    val parseMessageExpr = parseMessage(m, in)
+  def parseDelimited[T](m: Message, in: c.Expr[CodedInputStream]): c.Expr[T] = {
+    val parseMessageExpr = parseMessage[T](m, in)
     reify {
       val size = in.splice.readRawVarint32()
       val oldLimit = in.splice.pushLimit(size)
@@ -123,7 +123,7 @@ class ParserHelper[C <: Context](val c: C) {
       }
     }
 
-  private def constructMessage(m: Message, varDefs: Map[Field, ValDef]): c.Expr[Any] = {
+  private def constructMessage[T](m: Message, varDefs: Map[Field, ValDef]): c.Expr[T] = {
     val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
       fieldAndVarDef._1 match {
         case f: Scalar if !f.optional => Select(Ident(fieldAndVarDef._2.name), newTermName("get"))
