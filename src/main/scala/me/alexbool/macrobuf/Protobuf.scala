@@ -2,6 +2,7 @@ package me.alexbool.macrobuf
 
 import scala.reflect.runtime.universe._
 import me.alexbool.macrobuf.macros.Macros
+import me.alexbool.macrobuf.reflection.{ListReflectionSerializer, ReflectionSerializer, ListReflectionParser, ReflectionParser}
 
 object Protobuf {
   import language.experimental.macros

@@ -1,4 +1,13 @@
-package me.alexbool.macrobuf
+package me.alexbool.macrobuf.reflection
+
+import me.alexbool.macrobuf._
+import me.alexbool.macrobuf.Message6
+import me.alexbool.macrobuf.Message2
+import me.alexbool.macrobuf.Message3
+import me.alexbool.macrobuf.Message7
+import me.alexbool.macrobuf.Message4
+import me.alexbool.macrobuf.Message1
+import me.alexbool.macrobuf.Message5
 
 class ReflectionRuntimeParserSpec extends ParserSpec {
   def name = "Reflection runtime protobuf parser"

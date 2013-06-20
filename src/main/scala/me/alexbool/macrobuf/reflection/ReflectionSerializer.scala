@@ -1,11 +1,11 @@
-package me.alexbool.macrobuf
+package me.alexbool.macrobuf.reflection
 
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe.definitions._
 import scala.reflect.ClassTag
 import java.io.OutputStream
 import com.google.protobuf.CodedOutputStream
-import MessageMetadata.runtime._
+import me.alexbool.macrobuf.{MessageMetadata, Serializer}
 
 class ReflectionSerializer[T](tpe: Type) extends Serializer[T] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))

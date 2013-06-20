@@ -1,10 +1,10 @@
-package me.alexbool.macrobuf
+package me.alexbool.macrobuf.reflection
 
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe.definitions._
 import java.io.InputStream
 import com.google.protobuf.{CodedInputStream, WireFormat}
-import MessageMetadata.runtime._
+import me.alexbool.macrobuf.{MessageMetadata, Parser}
 
 class ReflectionParser[T](tpe: Type) extends Parser[T] {
   private val parser = new ReflectionMessageParser(MessageMetadata.runtime(tpe))

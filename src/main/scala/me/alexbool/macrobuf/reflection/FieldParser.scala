@@ -1,4 +1,4 @@
-package me.alexbool.macrobuf
+package me.alexbool.macrobuf.reflection
 
 import com.google.protobuf.CodedInputStream
 
