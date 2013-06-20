@@ -60,8 +60,10 @@ class ParserHelper[C <: Context](val c: C) {
     val varDefsExpr = varDefs.values.map(c.Expr(_)).reduce((a, b) => reify { a.splice; b.splice })
     val tag = c.Expr[Int](Ident(newTermName("tag")))
     val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
-    val checkAllRequiredFieldsAreProvidedExpr =
-      c.Expr[Unit](Block(checkAllRequiredFieldsAreProvided(varDefs), Literal(Constant(()))))
+    val checkAllRequiredFieldsAreProvidedExprs = checkAllRequiredFieldsAreProvided(varDefs)
+    val checkAllRequiredFieldsAreProvidedExpr: c.Expr[Unit] =
+      if (checkAllRequiredFieldsAreProvidedExprs.isEmpty) reify { }
+      else checkAllRequiredFieldsAreProvidedExprs.reduce((a, b) => reify { a.splice; b.splice })
     val constructMessageExpr = constructMessage(m, varDefs)
     reify {
       varDefsExpr.splice
@@ -117,12 +119,12 @@ class ParserHelper[C <: Context](val c: C) {
     Assign(readIntoVar, fieldValue.tree)
   }
 
-  private def checkAllRequiredFieldsAreProvided(varDefs: Map[Field, ValDef]): List[Tree] = varDefs.to[List]
+  private def checkAllRequiredFieldsAreProvided(varDefs: Map[Field, ValDef]): List[c.Expr[Unit]] = varDefs.to[List]
     .flatMap { fieldAndVar => fieldAndVar._1 match {
         case f: Scalar if !f.optional => Some(reify {
           require(c.Expr[Option[_]](Ident(fieldAndVar._2.name)).splice.isDefined, "Field must be set")
-        }.tree)
-        case _                           => None
+        })
+        case _                        => None
       }
     }
 
