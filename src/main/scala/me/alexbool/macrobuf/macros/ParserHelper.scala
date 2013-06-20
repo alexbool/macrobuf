@@ -32,9 +32,12 @@ class ParserHelper[C <: Context](val c: C) {
   def readDouble(in: c.Expr[CodedInputStream]): c.Expr[Double]   = reify { in.splice.readDouble() }
   def readString(in: c.Expr[CodedInputStream]): c.Expr[String]   = reify { in.splice.readString() }
 
-  def requireWireFormat(tag: c.Expr[Int], wf: Int): c.Expr[Unit] = reify {
-    val actualWf = tag.splice & (1 << 3) - 1 // XXX Kinda hack
-    require(actualWf == wf, s"Wrong field wire format: found $actualWf, expected $wf")
+  def requireWireFormat(tag: c.Expr[Int], wf: Int): c.Expr[Unit] = {
+    val wfExpr = c.Expr[Int](Literal(Constant(wf)))
+    reify {
+      val actualWf = tag.splice & (1 << 3) - 1 // XXX Kinda hack
+      require(actualWf == wfExpr.splice, s"Wrong field wire format: found $actualWf, expected ${wfExpr.splice}")
+    }
   }
 
   def parseField(f: mm.Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
@@ -53,53 +56,73 @@ class ParserHelper[C <: Context](val c: C) {
     // 8. Construct message
     // 9. PROFIT!!!
     val varDefs = declareVars(m)
-    val varDefsExprs = varDefs.values.map(c.Expr(_))
-    ???
+    val varDefsExpr = varDefs.values.map(c.Expr(_)).reduce((a, b) => reify { a.splice; b.splice })
+    val tag = c.Expr[Int](Ident(newTermName("tag")))
+    val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
+    val checkAllRequiredFieldsAreProvidedExpr =
+      c.Expr[Unit](Block(checkAllRequiredFieldsAreProvided(varDefs), Literal(Constant(()))))
+    val constructMessageExpr = constructMessage(m, varDefs)
+    reify {
+      varDefsExpr.splice
+      while (!in.splice.isAtEnd) {
+        val tag = in.splice.readTag()
+        val number = WireFormat.getTagFieldNumber(tag)
+        matchOnNumber.splice
+      }
+      checkAllRequiredFieldsAreProvidedExpr.splice
+      constructMessageExpr.splice
+    }
   }
 
   private def declareVars(m: mm.Message): Map[mm.Field, ValDef] = {
     def varDefForField(f: mm.Field): ValDef = {
-      val tpt: Tree = TypeTree(f match {
-        case f: mm.Scalar   => typeOf[Option[f.actualType.type]]
-        case f: mm.Repeated => f.getter.returnType
-      })
+      val tpt: Tree = f match {
+        case f: mm.Scalar   => AppliedTypeTree(Ident(newTypeName("Option")), List(TypeTree(f.actualType)))
+        case f: mm.Repeated => TypeTree(f.getter.returnType)
+      }
       val rhs: Tree = f match {
         case f: mm.Scalar   => reify { None  }.tree
         case f: mm.Repeated => reify { Seq() }.tree
       }
-      ValDef(Modifiers(Flag.MUTABLE), newTermName(f.fieldName), tpt, rhs)
+      ValDef(Modifiers(Flag.MUTABLE), newTermName(s"${f.fieldName}${f.number}"), tpt, rhs)
     }
     m.fields.map(f => (f, varDefForField(f))).toMap
   }
 
   private def patternMatchOnFieldNumber(varDefs: Map[mm.Field, ValDef], tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Match = {
     val cases: List[CaseDef] = varDefs.to[List].map(fieldAndVar => {
-      CaseDef(Literal(Constant(fieldAndVar._1.number)), EmptyTree, readField(fieldAndVar._1, fieldAndVar._2, tag, in))
+      CaseDef(Literal(Constant(fieldAndVar._1.number)), EmptyTree, readField(fieldAndVar._1, Ident(fieldAndVar._2.name), tag, in))
     })
     Match(Ident(newTermName("number")), cases)
   }
 
-  private def readField(f: mm.Field, readIntoVar: ValDef, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Tree = {
+  private def readField(f: mm.Field, readIntoVar: Ident, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Tree = {
     val parsedValue = parseField(f, tag, in)
     val fieldValue = f match {
-      case f: mm.Scalar   => reify { Some(parsedValue) }
+      case f: mm.Scalar   => reify { Some(parsedValue.splice) }
       case f: mm.Repeated => reify { c.Expr[Seq[_]](readIntoVar).splice :+ parsedValue.splice }
     }
     Assign(readIntoVar, fieldValue.tree)
   }
 
-  private def checkAllRequiredFieldsAreProvided(varDefs: Map[mm.Field, ValDef]): List[c.Expr[Unit]] = varDefs.to[List]
+  private def checkAllRequiredFieldsAreProvided(varDefs: Map[mm.Field, ValDef]): List[Tree] = varDefs.to[List]
     .flatMap { fieldAndVar => fieldAndVar._1 match {
         case f: mm.Scalar if !f.optional => Some(reify {
-          require(c.Expr[Option[_]](fieldAndVar._2).splice.isDefined, "Field must be set")
-        })
+          require(c.Expr[Option[_]](Ident(fieldAndVar._2.name)).splice.isDefined, "Field must be set")
+        }.tree)
         case _                           => None
       }
     }
 
   private def constructMessage(m: mm.Message, varDefs: Map[mm.Field, ValDef]): c.Expr[Any] = {
-    val ctor = m.ctor
-    val args = varDefs.to[List].sortBy(_._1.number).map(_._2).map(v => Ident(v.name))
-    c.Expr[Any](Apply(Ident(ctor), args))
+    // val ctor = m.ctor // XXX
+    val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
+      fieldAndVarDef._1 match {
+        case f: mm.Scalar if !f.optional => Apply(Select(Ident(fieldAndVarDef._2.name), newTermName("get")), List())
+        case _                           => Ident(fieldAndVarDef._2.name)
+      }
+    }
+    // c.Expr[Any](Apply(Select(m.thisType, Ident(ctor)), args))
+    c.Expr(Apply(Select(New(TypeTree(m.thisType)), nme.CONSTRUCTOR), args))
   }
 }

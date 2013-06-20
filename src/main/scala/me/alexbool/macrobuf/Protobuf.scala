@@ -24,4 +24,6 @@ object Protobuf {
 
   def macroSerializer[T]: Serializer[T] = macro Macros.serializer[T]
   def listMacroSerializer[T]: Serializer[Iterable[T]] = macro Macros.listSerializer[T]
+
+  def macroParser[T]: Parser[T] = macro Macros.parser[T]
 }
