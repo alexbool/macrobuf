@@ -118,7 +118,7 @@ class ParserHelper[C <: Context](val c: C) {
     // val ctor = m.ctor // XXX
     val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
       fieldAndVarDef._1 match {
-        case f: mm.Scalar if !f.optional => Apply(Select(Ident(fieldAndVarDef._2.name), newTermName("get")), List())
+        case f: mm.Scalar if !f.optional => Select(Ident(fieldAndVarDef._2.name), newTermName("get"))
         case _                           => Ident(fieldAndVarDef._2.name)
       }
     }
