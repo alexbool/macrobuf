@@ -129,14 +129,12 @@ class ParserHelper[C <: Context](val c: C) {
     }
 
   private def constructMessage(m: Message, varDefs: Map[Field, ValDef]): c.Expr[Any] = {
-    // val ctor = m.ctor // XXX
     val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
       fieldAndVarDef._1 match {
         case f: Scalar if !f.optional => Select(Ident(fieldAndVarDef._2.name), newTermName("get"))
         case _                           => Ident(fieldAndVarDef._2.name)
       }
     }
-    // c.Expr[Any](Apply(Select(m.thisType, Ident(ctor)), args))
     c.Expr(Apply(Select(New(TypeTree(m.actualType)), nme.CONSTRUCTOR), args))
   }
 }
