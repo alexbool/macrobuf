@@ -57,7 +57,7 @@ class ParserHelper[C <: Context](val c: C) {
     // 8. Construct message
     // 9. PROFIT!!!
     val varDefs = declareVars(m)
-    val varDefsExpr = varDefs.values.map(c.Expr(_)).reduce((a, b) => reify { a.splice; b.splice })
+    val varDefsTree = Block(varDefs.values.to[List], Literal(Constant(())))
     val tag = c.Expr[Int](Ident(newTermName("tag")))
     val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
     val checkAllRequiredFieldsAreProvidedExprs = checkAllRequiredFieldsAreProvided(varDefs)
@@ -65,16 +65,15 @@ class ParserHelper[C <: Context](val c: C) {
       if (checkAllRequiredFieldsAreProvidedExprs.isEmpty) reify { }
       else checkAllRequiredFieldsAreProvidedExprs.reduce((a, b) => reify { a.splice; b.splice })
     val constructMessageExpr = constructMessage(m, varDefs)
-    reify {
-      varDefsExpr.splice
+    val loopTree = reify {
       while (!in.splice.isAtEnd) {
         val tag = in.splice.readTag()
         val number = WireFormat.getTagFieldNumber(tag)
         matchOnNumber.splice
       }
       checkAllRequiredFieldsAreProvidedExpr.splice
-      constructMessageExpr.splice
-    }
+    }.tree
+    c.Expr(Block(varDefsTree.children :+ loopTree, constructMessageExpr.tree))
   }
 
   def parseEmbeddedMessage(m: Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
