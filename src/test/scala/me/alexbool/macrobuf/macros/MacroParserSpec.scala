@@ -1,6 +1,7 @@
 package me.alexbool.macrobuf.macros
 
 import me.alexbool.macrobuf._
+import Messages._
 
 class MacroParserSpec extends ParserSpec {
   def name = "Macro protobuf parser"

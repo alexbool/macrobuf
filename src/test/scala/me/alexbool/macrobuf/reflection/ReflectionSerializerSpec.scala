@@ -1,13 +1,7 @@
 package me.alexbool.macrobuf.reflection
 
 import me.alexbool.macrobuf._
-import me.alexbool.macrobuf.Message6
-import me.alexbool.macrobuf.Message2
-import me.alexbool.macrobuf.Message3
-import me.alexbool.macrobuf.Message7
-import me.alexbool.macrobuf.Message4
-import me.alexbool.macrobuf.Message1
-import me.alexbool.macrobuf.Message5
+import Messages._
 
 class ReflectionSerializerSpec extends SerializerSpec {
   def name = "Reflection protobuf serializer"

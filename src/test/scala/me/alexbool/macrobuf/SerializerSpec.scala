@@ -1,8 +1,9 @@
 package me.alexbool.macrobuf
 
+import scala.reflect.runtime.universe._
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
-import scala.reflect.runtime.universe._
+import Messages._
 
 trait SerializerSpec extends WordSpec with MustMatchers {
 

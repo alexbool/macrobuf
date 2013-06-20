@@ -2,6 +2,7 @@ package me.alexbool.macrobuf
 
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
+import Messages._
 
 trait ParserSpec extends WordSpec with MustMatchers {
 
