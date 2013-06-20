@@ -43,7 +43,7 @@ class ParserHelper[C <: Context](val c: C) {
 
   def parseField(f: Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
     case _: Primitive | _: RepeatedPrimitive => parsePrimitive(f.actualType)(tag, in)
-    case m: MessageField                        => parseEmbeddedMessage(m, in)
+    case m: MessageField                     => parseEmbeddedMessage(m, in)
   }
 
   def parseMessage(m: Message, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
