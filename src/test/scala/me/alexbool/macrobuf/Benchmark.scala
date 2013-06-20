@@ -41,6 +41,7 @@ object Benchmark extends App {
   val reflectionSerializer = Protobuf.listSerializer[BenchmarkMessage]
   val macroSerializer      = Protobuf.listMacroSerializer[BenchmarkMessage]
   val reflectionParser     = Protobuf.listParser[BenchmarkMessage]
+  val macroParser          = Protobuf.listMacroParser[BenchmarkMessage]
 
   println("----Serialization----")
   println("Reflection")
@@ -51,4 +52,6 @@ object Benchmark extends App {
   println("-------Parsing-------")
   println("Reflection")
   parse(serialized, reflectionParser)
+  println("Macro")
+  parse(serialized, macroParser)
 }
