@@ -6,9 +6,10 @@ import me.alexbool.macrobuf.MessageMetadata
 
 class SerializierHelper[C <: Context](val c: C) {
 
-  import c.universe._
-
   val mm = MessageMetadata[c.universe.type](c.universe)
+
+  import c.universe._
+  import mm._
 
   /**
    * Constructs expression to write given value expression
@@ -154,31 +155,31 @@ class SerializierHelper[C <: Context](val c: C) {
       out.splice.writeRawVarint32(size.splice)
     })
 
-  def value(obj: c.Expr[Any], f: mm.Field): c.Expr[Any] = c.Expr(c.universe.Select(obj.tree, f.getter))
+  def value(obj: c.Expr[Any], f: Field): c.Expr[Any] = c.Expr(c.universe.Select(obj.tree, f.getter))
   def toExpr[V](v: V): c.Expr[V] = c.Expr[V](Literal(Constant(v)))
 
-  def serializeField(obj: c.Expr[Any], f: mm.Field, out: c.Expr[CodedOutputStream]): c.Expr[Unit] = f match {
-    case p: mm.Primitive => {
+  def serializeField(obj: c.Expr[Any], f: Field, out: c.Expr[CodedOutputStream]): c.Expr[Unit] = f match {
+    case p: Primitive => {
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => writePrimitive(p.actualType)(out, toExpr(p.number), e)
       if (p.optional) optional(value(obj, f).asInstanceOf[c.Expr[Option[Any]]], exprF)
       else exprF(value(obj, f))
     }
-    case rp: mm.RepeatedPrimitive => {
+    case rp: RepeatedPrimitive => {
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => writePrimitive(rp.actualType)(out, toExpr(rp.number), e)
       repeated(value(obj, f).asInstanceOf[c.Expr[Seq[Any]]], exprF)
     }
-    case em: mm.EmbeddedMessage => {
+    case em: EmbeddedMessage => {
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => c.Expr(Block(serializeEmbeddedMessage(em, e, out).map(_.tree), Literal(Constant(()))))
       if (em.optional) optional(value(obj, f).asInstanceOf[c.Expr[Option[Any]]], exprF)
       else exprF(value(obj, em))
     }
-    case rm: mm.RepeatedMessage => {
+    case rm: RepeatedMessage => {
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => c.Expr(Block(serializeEmbeddedMessage(rm, e, out).map(_.tree), Literal(Constant(()))))
       repeated(value(obj, rm).asInstanceOf[c.Expr[Seq[Any]]], exprF)
     }
   }
 
-  def serializeEmbeddedMessage(m: mm.MessageField, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): List[c.Expr[Unit]] = {
+  def serializeEmbeddedMessage(m: MessageField, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): List[c.Expr[Unit]] = {
     // 1. Write fields
     val writeFields = serializeMessage(m, obj, out)
     // 2. Compute size
@@ -189,32 +190,32 @@ class SerializierHelper[C <: Context](val c: C) {
     writeTagAndSize ++ writeFields
   }
 
-  def serializeMessage(m: mm.Message, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): List[c.Expr[Unit]] = {
+  def serializeMessage(m: Message, obj: c.Expr[Any], out: c.Expr[CodedOutputStream]): List[c.Expr[Unit]] = {
     require(m.fields.size > 0, s"Message ${m.messageName} has no fields. Messages must contain at least one field")
     m.fields.map(serializeField(obj, _, out)).to[List]
   }
 
-  def messageSize(m: mm.Message, obj: c.Expr[Any]): c.Expr[Int] = {
+  def messageSize(m: Message, obj: c.Expr[Any]): c.Expr[Int] = {
     // 1. Get sizes of all the fields
     // 2. Sum them
     m.fields
       .map(f => f match {
-      case f: mm.Primitive if f.optional => {
+      case f: Primitive if f.optional => {
           val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
             sizeOfPrimitive(f.actualType)(toExpr(f.number), c.Expr[f.actualType.type](Ident(newTermName("m")))).tree)
           val mappedOption = mapOption[f.actualType.type, Int](value(obj, f).asInstanceOf[c.Expr[Option[f.actualType.type]]], c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
       }
-      case f: mm.Primitive if !f.optional => sizeOfPrimitive(f.actualType)(toExpr(f.number), value(obj, f))
-      case f: mm.RepeatedPrimitive => sizeOfRepeatedPrimitive(f.actualType)(toExpr(f.number), value(obj, f).asInstanceOf[c.Expr[Iterable[Any]]])
-      case f: mm.EmbeddedMessage if f.optional => {
+      case f: Primitive if !f.optional => sizeOfPrimitive(f.actualType)(toExpr(f.number), value(obj, f))
+      case f: RepeatedPrimitive => sizeOfRepeatedPrimitive(f.actualType)(toExpr(f.number), value(obj, f).asInstanceOf[c.Expr[Iterable[Any]]])
+      case f: EmbeddedMessage if f.optional => {
           val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
             messageSizeWithTag(f, c.Expr[f.actualType.type](Ident(newTermName("m")))).tree)
           val mappedOption = mapOption[f.actualType.type, Int](value(obj, f).asInstanceOf[c.Expr[Option[f.actualType.type]]], c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
       }
-      case f: mm.EmbeddedMessage if !f.optional => messageSizeWithTag(f, value(obj, f))
-      case f: mm.RepeatedMessage => {
+      case f: EmbeddedMessage if !f.optional => messageSizeWithTag(f, value(obj, f))
+      case f: RepeatedMessage => {
         val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
           messageSizeWithTag(f, c.Expr[f.thisType.type](Ident(newTermName("m")))).tree)
         sizeOfRepeated(value(obj, f).asInstanceOf[c.Expr[Iterable[f.thisType.type]]], c.Expr(mapper))
@@ -223,7 +224,7 @@ class SerializierHelper[C <: Context](val c: C) {
       .reduce((e1, e2) => reify { e1.splice + e2.splice })
   }
 
-  def messageSizeWithTag(m: mm.MessageField, obj: c.Expr[Any]): c.Expr[Int] = {
+  def messageSizeWithTag(m: MessageField, obj: c.Expr[Any]): c.Expr[Int] = {
     val tagSize: c.Expr[Int] = sizeOfTag(toExpr(m.number))
     val msgSize: c.Expr[Int] = messageSize(m, obj)
     reify {
