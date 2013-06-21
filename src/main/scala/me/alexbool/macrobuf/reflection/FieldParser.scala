@@ -45,10 +45,7 @@ object FieldParsers {
     def parse(in: CodedInputStream) = {
       val size = in.readRawVarint32()
       val oldLimit = in.pushLimit(size)
-      val result = new Iterator[T] {
-        def hasNext = !in.isAtEnd
-        def next() = underlying.parseOne(in)
-      }.to[Seq]
+      val result = new ParseUntilLimitIterator(in, underlying).to[Seq]
       in.popLimit(oldLimit)
       result
     }
@@ -68,4 +65,9 @@ trait MessageParser extends ScalarFieldParser[Any] {
 
   /** Reads from stream until limit/EOF. Use for single root message per input stream */
   def parseUntilLimit(in: CodedInputStream): Any
+}
+
+private[reflection] class ParseUntilLimitIterator[T](in: CodedInputStream, p: ScalarFieldParser[T]) extends Iterator[T] {
+  def hasNext = !in.isAtEnd
+  def next() = p.parseOne(in)
 }

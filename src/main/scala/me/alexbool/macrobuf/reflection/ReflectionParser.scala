@@ -21,10 +21,7 @@ class ListReflectionParser[T](tpe: Type) extends Parser[Seq[T]] {
 
   def parse(input: InputStream) = {
     val codedIn = CodedInputStream.newInstance(input)
-    new Iterator[T] {
-      def hasNext = !codedIn.isAtEnd
-      def next() = parser.parseOne(codedIn).asInstanceOf[T]
-    }.to[Seq]
+    new ParseUntilLimitIterator(codedIn, parser.asInstanceOf[ScalarFieldParser[T]]).to[Seq]
   }
 }
 
