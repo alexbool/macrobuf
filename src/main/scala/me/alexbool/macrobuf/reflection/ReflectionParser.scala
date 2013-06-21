@@ -21,11 +21,10 @@ class ListReflectionParser[T](tpe: Type) extends Parser[Seq[T]] {
 
   def parse(input: InputStream) = {
     val codedIn = CodedInputStream.newInstance(input)
-    val buffer = collection.mutable.ListBuffer[T]()
-    while (!codedIn.isAtEnd) {
-      buffer += parser.parseOne(codedIn).asInstanceOf[T]
-    }
-    buffer.to[Seq]
+    new Iterator[T] {
+      def hasNext = !codedIn.isAtEnd
+      def next() = parser.parseOne(codedIn).asInstanceOf[T]
+    }.to[Seq]
   }
 }
 
