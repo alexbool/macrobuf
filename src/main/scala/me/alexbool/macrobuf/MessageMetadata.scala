@@ -1,6 +1,7 @@
 package me.alexbool.macrobuf
 
 import scala.reflect.api.Universe
+import me.alexbool.macrobuf.annotation.packed
 
 class MessageMetadata[U <: Universe](val u: U) {
   import u._
@@ -70,7 +71,7 @@ class MessageMetadata[U <: Universe](val u: U) {
     if      (isPrimitive(tpe))            Primitive(number, getter, optional = false)
     else if (tpe <:< typeOf[Option[_]])   if (isPrimitive(firstTypeArgument(tpe))) Primitive(number, getter, optional = true)
                                           else EmbeddedMessage(number, getter, fieldsFor(firstTypeArgument(tpe)), optional = true)
-    else if (tpe <:< typeOf[Iterable[_]]) if (isPrimitive(firstTypeArgument(tpe))) RepeatedPrimitive(number, getter)
+    else if (tpe <:< typeOf[Iterable[_]]) if (isPrimitive(firstTypeArgument(tpe))) RepeatedPrimitive(number, getter, isPacked(getter))
                                           else RepeatedMessage(number, getter, fieldsFor(firstTypeArgument(tpe)))
     else                                  EmbeddedMessage(number, getter, fieldsFor(tpe), optional = false)
   }
@@ -83,6 +84,13 @@ class MessageMetadata[U <: Universe](val u: U) {
   }
 
   private def firstTypeArgument(tpe: Type): Type = typeArguments(tpe).head
+
+  private def isPacked(getter: Getter): Boolean =
+    getter.annotations.find(_.tpe =:= typeOf[packed]).map(_.scalaArgs.head match {
+      case Literal(Constant(isPacked: Boolean))                  => isPacked
+      case Select(_, term) if term.decoded == "<init>$default$1" => true // XXX Bad hack!
+      case _                                                     => throw new IllegalArgumentException("Illegal annotation parameter")
+    }).getOrElse(false)
 }
 
 object MessageMetadata {

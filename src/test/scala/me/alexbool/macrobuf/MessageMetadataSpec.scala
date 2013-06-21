@@ -3,6 +3,7 @@ package me.alexbool.macrobuf
 import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import MessageMetadata.runtime._
+import me.alexbool.macrobuf.annotation.packed
 
 class MessageMetadataSpec extends WordSpec with MustMatchers {
 
@@ -11,6 +12,8 @@ class MessageMetadataSpec extends WordSpec with MustMatchers {
   case class Message3(name: String, msg: Option[Message2])
   case class Message4(name: Option[String], msgs: Iterable[Message1])
   case class Message5(msg: Message1)
+  case class Message6(@packed numbers: Iterable[Int])
+  case class Message7(@packed numbers: Iterable[String])
 
   "RootMessage factory" must {
     "construct tree for plain types" in {
@@ -56,6 +59,12 @@ class MessageMetadataSpec extends WordSpec with MustMatchers {
       val rm = MessageMetadata.runtime[Message5]
       rm.fields.head.isInstanceOf[EmbeddedMessage] must be (true)
       rm.fields.head.asInstanceOf[EmbeddedMessage].optional must be (false)
+    }
+    "handle packed repeated fields" in {
+      val rm = MessageMetadata.runtime[Message6]
+      rm.fields.head.isInstanceOf[RepeatedPrimitive] must be (true)
+      rm.fields.head.asInstanceOf[RepeatedPrimitive].packed must be (true)
+      evaluating { MessageMetadata.runtime[Message7] } must produce [IllegalArgumentException]
     }
   }
 }
