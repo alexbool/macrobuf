@@ -24,7 +24,7 @@ class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
   def serialize(objs: Iterable[T], output: OutputStream) {
     val codedOut = CodedOutputStream.newInstance(output)
     for (obj <- objs) {
-      codedOut.writeRawVarint32(serializer.size(obj))
+      codedOut.writeRawVarint32(serializer.valueSize(obj))
       serializer.serialize(obj, codedOut)
       codedOut.flush()
     }
@@ -48,7 +48,7 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
     }
   }
 
-  def size(value: Any) = {
+  def valueSize(value: Any) = {
     val values = fieldValues(value)
     fieldSerializers.zip(values).map(fas => fas._1.serializer.size(fas._1.field.number, fas._2)).sum // XXX Oppa govnocode!
   }
