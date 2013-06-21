@@ -12,6 +12,6 @@ libraryDependencies ++= Seq(
     "org.scalatest"       %% "scalatest"     % "2.0.M6-SNAP8" % "test"
 )
 
-scalacOptions ++= Seq("-feature", "-deprecation")
+scalacOptions ++= Seq("-feature", "-deprecation", "-Ymacro-debug-lite")
 
 fork := true

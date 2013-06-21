@@ -18,7 +18,6 @@ object Macros {
         c.Expr[CodedOutputStream](Ident(newTermName("output"))))
         .map(_.tree),
         Literal(Constant(()))))
-    println(fs)
 
     val resultingSerializer = reify {
       new MacroSerializerBase[T] {
@@ -43,8 +42,6 @@ object Macros {
         .map(_.tree),
         Literal(Constant(()))))
     val ms = helper.messageSize(rm, c.Expr[T](Ident(newTermName("obj"))))
-    println(fs)
-    println(ms)
 
     val resultingSerializer = reify {
       new ListMacroSerializerBase[T] {
@@ -65,7 +62,6 @@ object Macros {
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
     val parseExpr = helper.parseMessage[T](rm, c.Expr[CodedInputStream](Ident(newTermName("input"))))
-    println(parseExpr)
 
     val resultingParser = reify {
       new MacroParserBase[T] {
@@ -83,7 +79,6 @@ object Macros {
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
     val parseExpr = helper.parseDelimited[T](rm, c.Expr[CodedInputStream](Ident(newTermName("input"))))
-    println(parseExpr)
 
     val resultingParser = reify {
       new ListMacroParserBase[T] {
