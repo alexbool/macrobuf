@@ -55,7 +55,8 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
   private def serializerForField(f: Field) = (f match {
     case f: Primitive if f.optional        => FieldSerializers.optional(serializerForPrimitive(f.actualType))
     case f: Primitive if !f.optional       => serializerForPrimitive(f.actualType)
-    case f: RepeatedPrimitive              => FieldSerializers.repeated(serializerForPrimitive(f.actualType))
+    case f: RepeatedPrimitive if  f.packed => FieldSerializers.packedRepeated(serializerForPrimitive(f.actualType))
+    case f: RepeatedPrimitive if !f.packed => FieldSerializers.repeated(serializerForPrimitive(f.actualType))
     case f: EmbeddedMessage if f.optional  => FieldSerializers.optional(new ReflectionMessageSerializer(f))
     case f: EmbeddedMessage if !f.optional => new ReflectionMessageSerializer(f)
     case f: RepeatedMessage                => FieldSerializers.repeated(new ReflectionMessageSerializer(f))
