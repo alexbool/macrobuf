@@ -23,7 +23,7 @@ class ListReflectionParser[T](tpe: Type) extends Parser[Seq[T]] {
     val codedIn = CodedInputStream.newInstance(input)
     val buffer = collection.mutable.ListBuffer[T]()
     while (!codedIn.isAtEnd) {
-      buffer += parser.parse(codedIn).asInstanceOf[T]
+      buffer += parser.parseOne(codedIn).asInstanceOf[T]
     }
     buffer.to[Seq]
   }
@@ -43,12 +43,13 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
   }
 
   private def parserForField(f: Field): FieldParser[Any] = f match {
+    case f: RepeatedPrimitive if f.packed    => FieldParsers.packedRepeated(parserForPrimitive(f.actualType))
     case _: Primitive | _: RepeatedPrimitive => parserForPrimitive(f.actualType)
     case m: MessageField                     => new ReflectionMessageParser(m)
   }
 
-  private def parserForPrimitive(tpe: Type): FieldParser[Any] = {
-    val parser: FieldParser[_] =
+  private def parserForPrimitive(tpe: Type): ScalarFieldParser[Any] = {
+    val parser: ScalarFieldParser[_] =
       if      (tpe =:= IntTpe)          FieldParsers.IntParser
       else if (tpe =:= LongTpe)         FieldParsers.LongParser
       else if (tpe =:= ShortTpe)        FieldParsers.ShortParser
@@ -57,7 +58,7 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
       else if (tpe =:= DoubleTpe)       FieldParsers.DoubleParser
       else if (tpe =:= typeOf[String])  FieldParsers.StringParser
       else throw new IllegalArgumentException("Unknown primitive type")
-    parser.asInstanceOf[FieldParser[Any]]
+    parser.asInstanceOf[ScalarFieldParser[Any]]
   }
 
   def parseUntilLimit(in: CodedInputStream): Any = {
@@ -65,7 +66,8 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
     while (!in.isAtEnd) {
       val number = WireFormat.getTagFieldNumber(in.readTag())
       require(number > 0, "Unexpected end of input stream")
-      fieldValuesByNumber += ((number, fieldAndParsersByNumber(number).parser.parse(in)))
+      for (value <- fieldAndParsersByNumber(number).parser.parse(in))
+        fieldValuesByNumber += ((number, value))
     }
     val preparedArguments = prepareArguments(fieldValuesByNumber)
     ctorMirror(preparedArguments:_*)
