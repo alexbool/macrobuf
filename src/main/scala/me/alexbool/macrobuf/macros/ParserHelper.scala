@@ -4,7 +4,7 @@ import scala.reflect.macros.Context
 import me.alexbool.macrobuf.MessageMetadata
 import com.google.protobuf.{WireFormat, CodedInputStream}
 
-class ParserHelper[C <: Context](val c: C) {
+private[macros] class ParserHelper[C <: Context](val c: C) {
 
   val mm = MessageMetadata[c.universe.type](c.universe)
 
