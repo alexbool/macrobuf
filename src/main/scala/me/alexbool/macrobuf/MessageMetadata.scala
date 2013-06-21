@@ -42,8 +42,8 @@ class MessageMetadata[U <: Universe](val u: U) {
     def messageName = actualType.typeSymbol.name.decoded
   }
 
-  case class Primitive private[macrobuf] (number: Int, getter: Getter, optional: Boolean = false) extends Scalar
-  case class EmbeddedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field], optional: Boolean = false) extends Scalar with MessageField
+  case class Primitive private[macrobuf] (number: Int, getter: Getter, optional: Boolean) extends Scalar
+  case class EmbeddedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field], optional: Boolean) extends Scalar with MessageField
 
   sealed trait Repeated extends Field
   case class RepeatedPrimitive private[macrobuf] (number: Int, getter: Getter, packed: Boolean) extends Repeated {
