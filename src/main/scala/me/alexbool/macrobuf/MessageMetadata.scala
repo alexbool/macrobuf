@@ -46,8 +46,8 @@ class MessageMetadata[U <: Universe](val u: U) {
   case class EmbeddedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field], optional: Boolean = false) extends Scalar with MessageField
 
   sealed trait Repeated extends Field
-  case class RepeatedPrimitive private[macrobuf] (number: Int, getter: Getter, packed: Boolean = false) extends Repeated {
-    if (packed) require (isStrictlyPrimitive(this.actualType), "Only primitive type fields can be packed")
+  case class RepeatedPrimitive private[macrobuf] (number: Int, getter: Getter, packed: Boolean) extends Repeated {
+    if (packed) require(isStrictlyPrimitive(this.actualType), "Only primitive type fields can be packed")
   }
   case class RepeatedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field]) extends Repeated with MessageField
 
