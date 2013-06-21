@@ -24,8 +24,7 @@ class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
   def serialize(objs: Iterable[T], output: OutputStream) {
     val codedOut = CodedOutputStream.newInstance(output)
     for (obj <- objs) {
-      codedOut.writeRawVarint32(serializer.valueSize(obj))
-      serializer.serialize(obj, codedOut)
+      serializer.serializeValue(obj, codedOut)
       codedOut.flush()
     }
   }
