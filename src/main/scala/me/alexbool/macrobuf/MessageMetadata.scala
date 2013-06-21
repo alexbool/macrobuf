@@ -45,7 +45,9 @@ class MessageMetadata[U <: Universe](val u: U) {
   case class EmbeddedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field], optional: Boolean = false) extends Scalar with MessageField
 
   sealed trait Repeated extends Field
-  case class RepeatedPrimitive private[macrobuf] (number: Int, getter: Getter) extends Repeated
+  case class RepeatedPrimitive private[macrobuf] (number: Int, getter: Getter, packed: Boolean = false) extends Repeated {
+    if (packed) require (isStrictlyPrimitive(this.actualType), "Only primitive type fields can be packed")
+  }
   case class RepeatedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field]) extends Repeated with MessageField
 
   def apply[T](implicit tt: WeakTypeTag[T]): RootMessage = apply(tt.tpe)
@@ -73,7 +75,8 @@ class MessageMetadata[U <: Universe](val u: U) {
     else                                  EmbeddedMessage(number, getter, fieldsFor(tpe), optional = false)
   }
 
-  private def isPrimitive(tpe: Type): Boolean = tpe <:< AnyValTpe || tpe <:< typeOf[String]
+  private def isPrimitive(tpe: Type): Boolean = isStrictlyPrimitive(tpe) || tpe <:< typeOf[String]
+  private def isStrictlyPrimitive(tpe: Type): Boolean = tpe <:< AnyValTpe
 
   private def typeArguments(tpe: Type) = tpe match {
     case TypeRef(_, _, args) => args
