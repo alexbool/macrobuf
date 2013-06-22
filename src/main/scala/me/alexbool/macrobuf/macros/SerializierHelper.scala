@@ -105,10 +105,9 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
     sizeOfRepeated(value, c.Expr(mapper))
   }
 
-  private def sizeOfRepeated[T](value: c.Expr[Iterable[T]], sizeF: c.Expr[T => Int]): c.Expr[Int] =
-    reify {
-      value.splice.map(sizeF.splice).sum
-    }
+  private def sizeOfRepeated[T](value: c.Expr[Iterable[T]], sizeF: c.Expr[T => Int]): c.Expr[Int] = reify {
+    value.splice.map(sizeF.splice).sum
+  }
 
   private def sizeOfTag(number: c.Expr[Int]): c.Expr[Int] = reify {
     CodedOutputStream.computeTagSize(number.splice)
