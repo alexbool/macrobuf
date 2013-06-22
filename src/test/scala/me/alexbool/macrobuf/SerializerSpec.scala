@@ -1,6 +1,5 @@
 package me.alexbool.macrobuf
 
-import scala.reflect.runtime.universe._
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.WordSpec
 import Messages._
