@@ -84,19 +84,22 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
    * Constructs expression to calculate size of given primitive value field
    */
   private def sizeOfPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Any]): c.Expr[Int] = {
-    import c.universe.definitions._
-    val sizeNoTag =
-      if      (tpe =:= IntTpe)         sizeOfInt(value.asInstanceOf[c.Expr[Int]])
-      else if (tpe =:= LongTpe)        sizeOfLong(value.asInstanceOf[c.Expr[Long]])
-      else if (tpe =:= ShortTpe)       sizeOfShort(value.asInstanceOf[c.Expr[Short]])
-      else if (tpe =:= BooleanTpe)     sizeOfBoolean(value.asInstanceOf[c.Expr[Boolean]])
-      else if (tpe =:= FloatTpe)       sizeOfFloat(value.asInstanceOf[c.Expr[Float]])
-      else if (tpe =:= DoubleTpe)      sizeOfDouble(value.asInstanceOf[c.Expr[Double]])
-      else if (tpe =:= typeOf[String]) sizeOfString(value.asInstanceOf[c.Expr[String]])
-      else throw new IllegalArgumentException("Unsupported primitive type")
+    val sizeNoTag = sizeOfPrimitiveNoTag(tpe)(value)
     reify {
       CodedOutputStream.computeTagSize(number.splice) + sizeNoTag.splice
     }
+  }
+
+  private def sizeOfPrimitiveNoTag(tpe: c.Type)(value: c.Expr[Any]): c.Expr[Int] = {
+    import c.universe.definitions._
+    if      (tpe =:= IntTpe)         sizeOfInt(value.asInstanceOf[c.Expr[Int]])
+    else if (tpe =:= LongTpe)        sizeOfLong(value.asInstanceOf[c.Expr[Long]])
+    else if (tpe =:= ShortTpe)       sizeOfShort(value.asInstanceOf[c.Expr[Short]])
+    else if (tpe =:= BooleanTpe)     sizeOfBoolean(value.asInstanceOf[c.Expr[Boolean]])
+    else if (tpe =:= FloatTpe)       sizeOfFloat(value.asInstanceOf[c.Expr[Float]])
+    else if (tpe =:= DoubleTpe)      sizeOfDouble(value.asInstanceOf[c.Expr[Double]])
+    else if (tpe =:= typeOf[String]) sizeOfString(value.asInstanceOf[c.Expr[String]])
+    else throw new IllegalArgumentException("Unsupported primitive type")
   }
 
   private def sizeOfRepeatedPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Iterable[Any]]): c.Expr[Int] = {
