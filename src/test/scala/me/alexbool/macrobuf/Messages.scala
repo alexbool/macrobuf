@@ -1,5 +1,7 @@
 package me.alexbool.macrobuf
 
+import me.alexbool.macrobuf.annotation.packed
+
 object Messages {
   case class Message1(number: Int)
   case class Message2(text: String)
@@ -9,4 +11,5 @@ object Messages {
   case class Message6(msgs: Seq[Message1])
   case class Message7(msg: Option[Message1])
   case class Message8(number: Long, string: String)
+  case class Message9(number: Int, @packed numbers: Iterable[Long])
 }

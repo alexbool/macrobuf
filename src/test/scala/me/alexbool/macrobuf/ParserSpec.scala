@@ -15,6 +15,7 @@ trait ParserSpec extends WordSpec with MustMatchers {
   def parserForMessage6: Parser[Message6]
   def parserForMessage7: Parser[Message7]
   def parserForMessage8: Parser[Message8]
+  def parserForMessage9: Parser[Message9]
   def listParserForMessage1: Parser[Seq[Message1]]
 
   name must {

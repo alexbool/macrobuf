@@ -13,5 +13,6 @@ class ReflectionRuntimeParserSpec extends ParserSpec {
   def parserForMessage6 = Protobuf.parserFromClass(classOf[Message6])
   def parserForMessage7 = Protobuf.parserFromClass(classOf[Message7])
   def parserForMessage8 = Protobuf.parserFromClass(classOf[Message8])
+  def parserForMessage9 = Protobuf.parserFromClass(classOf[Message9])
   def listParserForMessage1 = Protobuf.listParserFromClass(classOf[Message1])
 }

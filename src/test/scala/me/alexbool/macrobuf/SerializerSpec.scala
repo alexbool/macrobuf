@@ -15,6 +15,7 @@ trait SerializerSpec extends WordSpec with MustMatchers {
   def serializerForMessage6: Serializer[Message6]
   def serializerForMessage7: Serializer[Message7]
   def serializerForMessage8: Serializer[Message8]
+  def serializerForMessage9: Serializer[Message9]
   def listSerializerForMessage1: Serializer[Iterable[Message1]]
 
   name must {
