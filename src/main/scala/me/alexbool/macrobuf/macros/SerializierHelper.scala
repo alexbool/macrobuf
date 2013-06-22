@@ -62,6 +62,46 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
       out.splice.writeString(number.splice, value.splice)
     }
 
+  private def writePrimitiveNoTag(tpe: c.Type)(out: c.Expr[CodedOutputStream], value: c.Expr[Any]): c.Expr[Unit] = {
+    import c.universe.definitions._
+    if      (tpe =:= IntTpe)         writeIntNoTag(out, value.asInstanceOf[c.Expr[Int]])
+    else if (tpe =:= LongTpe)        writeLongNoTag(out, value.asInstanceOf[c.Expr[Long]])
+    else if (tpe =:= ShortTpe)       writeShortNoTag(out, value.asInstanceOf[c.Expr[Short]])
+    else if (tpe =:= BooleanTpe)     writeBooleanNoTag(out, value.asInstanceOf[c.Expr[Boolean]])
+    else if (tpe =:= FloatTpe)       writeFloatNoTag(out, value.asInstanceOf[c.Expr[Float]])
+    else if (tpe =:= DoubleTpe)      writeDoubleNoTag(out, value.asInstanceOf[c.Expr[Double]])
+    else if (tpe =:= typeOf[String]) writeStringNoTag(out, value.asInstanceOf[c.Expr[String]])
+    else throw new IllegalArgumentException("Unsupported primitive type")
+  }
+
+  private def writeIntNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Int]): c.Expr[Unit] = reify {
+    out.splice.writeInt32NoTag(value.splice)
+  }
+
+  private def writeLongNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Long]): c.Expr[Unit] = reify {
+    out.splice.writeInt64NoTag(value.splice)
+  }
+
+  private def writeShortNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Short]): c.Expr[Unit] = reify {
+    out.splice.writeInt32NoTag(value.splice)
+  }
+
+  private def writeBooleanNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Boolean]): c.Expr[Unit] = reify {
+    out.splice.writeBoolNoTag(value.splice)
+  }
+
+  private def writeFloatNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Float]): c.Expr[Unit] = reify {
+    out.splice.writeFloatNoTag(value.splice)
+  }
+
+  private def writeDoubleNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Double]): c.Expr[Unit] = reify {
+    out.splice.writeDoubleNoTag(value.splice)
+  }
+
+  private def writeStringNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[String]): c.Expr[Unit] = reify {
+    out.splice.writeStringNoTag(value.splice)
+  }
+
   private def optional[T](option: c.Expr[Option[T]], body: c.Expr[T] => c.Expr[Unit]): c.Expr[Unit] = {
     val readyBody = body(reify { option.splice.get })
     reify {
@@ -109,6 +149,18 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
         sizeOfPrimitive(tpe)(number, c.Expr(Ident(newTermName("m")))).tree
       )
     sizeOfRepeated(value, c.Expr(mapper))
+  }
+
+  private def sizeOfPackedRepeatedPrimitive(tpe: c.Type)(value: c.Expr[Iterable[Any]]): c.Expr[Int] = {
+    val mapper =
+      Function(
+        List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
+        sizeOfPrimitiveNoTag(tpe)(c.Expr(Ident(newTermName("m")))).tree
+      )
+    val sizeNoTag = sizeOfRepeated(value, c.Expr(mapper))
+    reify {
+      sizeNoTag.splice
+    }
   }
 
   private def sizeOfRepeated[T](value: c.Expr[Iterable[T]], sizeF: c.Expr[T => Int]): c.Expr[Int] = reify {
@@ -173,9 +225,22 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
       if (p.optional) optional(fieldValue(obj, f).asInstanceOf[c.Expr[Option[Any]]], exprF)
       else exprF(fieldValue(obj, f))
     }
-    case rp: RepeatedPrimitive => {
+    case rp: RepeatedPrimitive if !rp.packed => {
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => writePrimitive(rp.actualType)(out, toExpr(rp.number), e)
       repeated(fieldValue(obj, f).asInstanceOf[c.Expr[Seq[Any]]], exprF)
+    }
+    case rp: RepeatedPrimitive if rp.packed => {
+      val writeTag = reify {
+        out.splice.writeTag(toExpr(rp.number).splice, WireFormat.WIRETYPE_LENGTH_DELIMITED)
+      }
+      val writeSize = sizeOfPackedRepeatedPrimitive(rp.actualType)(fieldValue(obj, f))
+      val exprF: c.Expr[Any] => c.Expr[Unit] = e => writePrimitiveNoTag(rp.actualType)(out, e)
+      val writeElements = repeated(fieldValue(obj, f), exprF)
+      reify {
+        writeTag.splice
+        writeSize.splice
+        writeElements.splice
+      }
     }
     case em: EmbeddedMessage => {
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => c.Expr(Block(serializeEmbeddedMessage(em, e, out).map(_.tree), Literal(Constant(()))))
@@ -219,7 +284,14 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
           reify { mappedOption.splice.getOrElse(0) }
       }
       case f: Primitive if !f.optional => sizeOfPrimitive(f.actualType)(toExpr(f.number), fieldValue(obj, f))
-      case f: RepeatedPrimitive => sizeOfRepeatedPrimitive(f.actualType)(toExpr(f.number), fieldValue[Iterable[Any]](obj, f))
+      case f: RepeatedPrimitive if !f.packed => {
+        sizeOfRepeatedPrimitive(f.actualType)(toExpr(f.number), fieldValue[Iterable[Any]](obj, f))
+      }
+      case f: RepeatedPrimitive if f.packed => {
+        val tagSize = sizeOfTag(toExpr(f.number))
+        val valueSize = sizeOfPackedRepeatedPrimitive(f.actualType)(fieldValue[Iterable[Any]](obj, f))
+        reify { tagSize.splice + valueSize.splice }
+      }
       case f: EmbeddedMessage if f.optional => {
           val mapper =
             Function(
