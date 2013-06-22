@@ -27,6 +27,7 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   }
 
   // Serializiers for various primitive types
+  // XXX Inline all those methods
   private def writeInt(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Int]): c.Expr[Unit] =
     reify {
       out.splice.writeInt32(number.splice, value.splice)
@@ -74,6 +75,7 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
     else throw new IllegalArgumentException("Unsupported primitive type")
   }
 
+  // XXX Inline all those methods
   private def writeIntNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Int]): c.Expr[Unit] = reify {
     out.splice.writeInt32NoTag(value.splice)
   }
