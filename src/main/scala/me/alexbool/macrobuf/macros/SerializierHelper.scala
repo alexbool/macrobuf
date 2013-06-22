@@ -85,14 +85,18 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
    */
   private def sizeOfPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Any]): c.Expr[Int] = {
     import c.universe.definitions._
-    if      (tpe =:= IntTpe)         sizeOfInt(number, value.asInstanceOf[c.Expr[Int]])
-    else if (tpe =:= LongTpe)        sizeOfLong(number, value.asInstanceOf[c.Expr[Long]])
-    else if (tpe =:= ShortTpe)       sizeOfShort(number, value.asInstanceOf[c.Expr[Short]])
-    else if (tpe =:= BooleanTpe)     sizeOfBoolean(number, value.asInstanceOf[c.Expr[Boolean]])
-    else if (tpe =:= FloatTpe)       sizeOfFloat(number, value.asInstanceOf[c.Expr[Float]])
-    else if (tpe =:= DoubleTpe)      sizeOfDouble(number, value.asInstanceOf[c.Expr[Double]])
-    else if (tpe =:= typeOf[String]) sizeOfString(number, value.asInstanceOf[c.Expr[String]])
-    else throw new IllegalArgumentException("Unsupported primitive type")
+    val sizeNoTag =
+      if      (tpe =:= IntTpe)         sizeOfInt(value.asInstanceOf[c.Expr[Int]])
+      else if (tpe =:= LongTpe)        sizeOfLong(value.asInstanceOf[c.Expr[Long]])
+      else if (tpe =:= ShortTpe)       sizeOfShort(value.asInstanceOf[c.Expr[Short]])
+      else if (tpe =:= BooleanTpe)     sizeOfBoolean(value.asInstanceOf[c.Expr[Boolean]])
+      else if (tpe =:= FloatTpe)       sizeOfFloat(value.asInstanceOf[c.Expr[Float]])
+      else if (tpe =:= DoubleTpe)      sizeOfDouble(value.asInstanceOf[c.Expr[Double]])
+      else if (tpe =:= typeOf[String]) sizeOfString(value.asInstanceOf[c.Expr[String]])
+      else throw new IllegalArgumentException("Unsupported primitive type")
+    reify {
+      CodedOutputStream.computeTagSize(number.splice) + sizeNoTag.splice
+    }
   }
 
   private def sizeOfRepeatedPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Iterable[Any]]): c.Expr[Int] = {
@@ -111,39 +115,39 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   }
 
   // Size calculators
-  private def sizeOfInt(number: c.Expr[Int], value: c.Expr[Int]): c.Expr[Int] =
+  private def sizeOfInt(value: c.Expr[Int]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeInt32Size(number.splice, value.splice)
+      CodedOutputStream.computeInt32SizeNoTag(value.splice)
     }
 
-  private def sizeOfLong(number: c.Expr[Int], value: c.Expr[Long]): c.Expr[Int] =
+  private def sizeOfLong(value: c.Expr[Long]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeInt64Size(number.splice, value.splice)
+      CodedOutputStream.computeInt64SizeNoTag(value.splice)
     }
 
-  private def sizeOfShort(number: c.Expr[Int], value: c.Expr[Short]): c.Expr[Int] =
+  private def sizeOfShort(value: c.Expr[Short]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeInt32Size(number.splice, value.splice)
+      CodedOutputStream.computeInt32SizeNoTag(value.splice)
     }
 
-  private def sizeOfBoolean(number: c.Expr[Int], value: c.Expr[Boolean]): c.Expr[Int] =
+  private def sizeOfBoolean(value: c.Expr[Boolean]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeBoolSize(number.splice, value.splice)
+      CodedOutputStream.computeBoolSizeNoTag(value.splice)
     }
 
-  private def sizeOfFloat(number: c.Expr[Int], value: c.Expr[Float]): c.Expr[Int] =
+  private def sizeOfFloat(value: c.Expr[Float]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeFloatSize(number.splice, value.splice)
+      CodedOutputStream.computeFloatSizeNoTag(value.splice)
     }
 
-  private def sizeOfDouble(number: c.Expr[Int], value: c.Expr[Double]): c.Expr[Int] =
+  private def sizeOfDouble(value: c.Expr[Double]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeDoubleSize(number.splice, value.splice)
+      CodedOutputStream.computeDoubleSizeNoTag(value.splice)
     }
 
-  private def sizeOfString(number: c.Expr[Int], value: c.Expr[String]): c.Expr[Int] =
+  private def sizeOfString(value: c.Expr[String]): c.Expr[Int] =
     reify {
-      CodedOutputStream.computeStringSize(number.splice, value.splice)
+      CodedOutputStream.computeStringSizeNoTag(value.splice)
     }
 
   // Misc
