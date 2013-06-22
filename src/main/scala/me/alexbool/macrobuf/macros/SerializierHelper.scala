@@ -103,8 +103,11 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   }
 
   private def sizeOfRepeatedPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Iterable[Any]]): c.Expr[Int] = {
-    val mapper = Function(List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
-      sizeOfPrimitive(tpe)(number, c.Expr[tpe.type](Ident(newTermName("m")))).tree)
+    val mapper =
+      Function(
+        List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
+        sizeOfPrimitive(tpe)(number, c.Expr(Ident(newTermName("m")))).tree
+      )
     sizeOfRepeated(value, c.Expr(mapper))
   }
 
