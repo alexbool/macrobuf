@@ -235,7 +235,9 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
       val writeTag = reify {
         out.splice.writeTag(toExpr(rp.number).splice, WireFormat.WIRETYPE_LENGTH_DELIMITED)
       }
-      val writeSize = sizeOfPackedRepeatedPrimitive(rp.actualType)(fieldValue(obj, f))
+      val writeSize = reify {
+        out.splice.writeRawVarint32(sizeOfPackedRepeatedPrimitive(rp.actualType)(fieldValue(obj, f)).splice)
+      }
       val exprF: c.Expr[Any] => c.Expr[Unit] = e => writePrimitiveNoTag(rp.actualType)(out, e)
       val writeElements = repeated(fieldValue(obj, f), exprF)
       reify {
