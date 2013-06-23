@@ -136,7 +136,7 @@ object FieldSerializers {
 
   def packedRepeated[T](underlying: FieldSerializer[T]) = new FieldSerializer[Seq[T]] {
     def serializeTag(number: Int, out: CodedOutputStream) {
-      underlying.serializeTag(number, out)
+      out.writeTag(number, WIRETYPE_LENGTH_DELIMITED)
     }
 
     def serializeValue(value: Seq[T], out: CodedOutputStream) {
