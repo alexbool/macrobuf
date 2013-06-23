@@ -12,17 +12,23 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   import mm._
   import WireFormat._
 
-  private def parsePrimitive(tpe: c.Type)(tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
+  private def parsePrimitive(tpe: c.Type, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
     import c.universe.definitions._
-    // XXX Flatten blocks with field type requirement and value reading
-    if      (tpe =:= IntTpe)         reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readInt(in).splice     }
-    else if (tpe =:= LongTpe)        reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readLong(in).splice    }
-    else if (tpe =:= ShortTpe)       reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readShort(in).splice   }
-    else if (tpe =:= BooleanTpe)     reify { requireWireFormat(tag, WIRETYPE_VARINT).splice;           readBoolean(in).splice }
-    else if (tpe =:= FloatTpe)       reify { requireWireFormat(tag, WIRETYPE_FIXED32).splice;          readFloat(in).splice   }
-    else if (tpe =:= DoubleTpe)      reify { requireWireFormat(tag, WIRETYPE_FIXED64).splice;          readDouble(in).splice  }
-    else if (tpe =:= typeOf[String]) reify { requireWireFormat(tag, WIRETYPE_LENGTH_DELIMITED).splice; readString(in).splice  }
+    if      (tpe =:= IntTpe)         readInt(in)
+    else if (tpe =:= LongTpe)        readLong(in)
+    else if (tpe =:= ShortTpe)       readShort(in)
+    else if (tpe =:= BooleanTpe)     readBoolean(in)
+    else if (tpe =:= FloatTpe)       readFloat(in)
+    else if (tpe =:= DoubleTpe)      readDouble(in)
+    else if (tpe =:= typeOf[String]) readString(in)
     else throw new IllegalArgumentException("Unsupported primitive type")
+  }
+
+  private def parsePrimitiveAndRequireWireFormat(tpe: c.Type, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
+    val requireWireTypeExpr = requireWireTypeForPrimitive(tpe, tag)
+    val parseExpr = parsePrimitive(tpe, in)
+    // XXX Flatten 'require' block of exprs
+    reify { requireWireTypeExpr.splice; parseExpr.splice }
   }
 
   // Parsers for primitive types
@@ -42,8 +48,21 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     }
   }
 
+  private def requireWireTypeForPrimitive(tpe: c.Type, tag: c.Expr[Int]): c.Expr[Unit] = {
+    import c.universe.definitions._
+    if      (tpe =:= IntTpe)         requireWireFormat(tag, WIRETYPE_VARINT)
+    else if (tpe =:= LongTpe)        requireWireFormat(tag, WIRETYPE_VARINT)
+    else if (tpe =:= ShortTpe)       requireWireFormat(tag, WIRETYPE_VARINT)
+    else if (tpe =:= BooleanTpe)     requireWireFormat(tag, WIRETYPE_VARINT)
+    else if (tpe =:= FloatTpe)       requireWireFormat(tag, WIRETYPE_FIXED32)
+    else if (tpe =:= DoubleTpe)      requireWireFormat(tag, WIRETYPE_FIXED64)
+    else if (tpe =:= typeOf[String]) requireWireFormat(tag, WIRETYPE_LENGTH_DELIMITED)
+    else throw new IllegalArgumentException("Unsupported primitive type")
+  }
+
   private def parseField(f: Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
-    case _: Primitive | _: RepeatedPrimitive => parsePrimitive(f.actualType)(tag, in)
+    case f: RepeatedPrimitive if f.packed    => parsePackedRepeatedField(f, tag, in)
+    case _: Primitive | _: RepeatedPrimitive => parsePrimitiveAndRequireWireFormat(f.actualType, tag, in)
     case m: MessageField                     => parseDelimited(m, in)
   }
 
@@ -84,6 +103,33 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     }
   }
 
+  private def parsePackedRepeatedField(f: RepeatedPrimitive, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Seq[Any]] = {
+    val tree = reify {
+      requireWireFormat(tag, WIRETYPE_LENGTH_DELIMITED).splice
+      val length = in.splice.readRawVarint32()
+      val oldLimit = in.splice.pushLimit(length)
+      val result = new Iterator[Any] {
+        def hasNext = !in.splice.isAtEnd
+        def next() = parsePrimitive(f.actualType, in).splice
+      }.to[Seq]
+      in.splice.popLimit(oldLimit)
+      result
+    }.tree
+    // XXX Hack! Wait for quasiquotes and just write q"new Iterator[${f.actualType}] { ... }"
+    c.Expr(
+      TypeApply(
+        Select(tree, newTermName("asInstanceOf")),
+        List(
+          AppliedTypeTree(
+            Ident(newTypeName("Seq")),
+            List(TypeTree(f.actualType)
+            )
+          )
+        )
+      )
+    )
+  }
+
   private def declareVars(m: Message): Map[Field, ValDef] = {
     def varDefForField(f: Field): ValDef = {
       val tpt: Tree = f match {
@@ -109,8 +155,9 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   private def readField(f: Field, readIntoVar: Ident, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Tree = {
     val parsedValue = parseField(f, tag, in)
     val fieldValue = f match {
-      case f: Scalar   => reify { Some(parsedValue.splice) }
-      case f: Repeated => reify { c.Expr[Seq[_]](readIntoVar).splice :+ parsedValue.splice }
+      case f: Scalar                        => reify { Some(parsedValue.splice) }
+      case f: RepeatedPrimitive if f.packed => reify { parsedValue.splice }
+      case f: Repeated                      => reify { c.Expr[Seq[_]](readIntoVar).splice :+ parsedValue.splice }
     }
     Assign(readIntoVar, fieldValue.tree)
   }
