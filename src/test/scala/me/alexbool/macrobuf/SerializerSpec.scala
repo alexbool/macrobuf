@@ -59,7 +59,7 @@ trait SerializerSpec extends WordSpec with MustMatchers {
     }
     "serialize messages with packed repeated fields" in {
       val serializer = serializerForMessage9
-      serializer.serialize(Message9(150, Seq(1, 2, 3))) must equal (Array(0x08, 0x96, 0x01, 0x10, 0x03, 0x01, 0x02, 0x03).map(_.toByte))
+      serializer.serialize(Message9(150, Seq(1, 2, 3))) must equal (Array(0x08, 0x96, 0x01, 0x12, 0x03, 0x01, 0x02, 0x03).map(_.toByte))
     }
     "serialize lists of messages using delimeted format" in {
       val serializer = listSerializerForMessage1
