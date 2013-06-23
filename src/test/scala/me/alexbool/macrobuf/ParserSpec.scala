@@ -57,6 +57,10 @@ trait ParserSpec extends WordSpec with MustMatchers {
       val parser = parserForMessage8
       parser.parse(Array(0x08, 0x96, 0x01, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67).map(_.toByte)) must equal (Message8(150, "testing"))
     }
+    "parse messages with packed repeated fields" in {
+      val parser = parserForMessage9
+      parser.parse(Array(0x08, 0x96, 0x01, 0x12, 0x03, 0x01, 0x02, 0x03).map(_.toByte)) must equal (Message9(150, Seq(1, 2, 3)))
+    }
     "parse lists of messages using delimeted format" in {
       val parser = listParserForMessage1
       parser.parse(Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00).map(_.toByte)) must equal (Seq(Message1(150), Message1(0)))
