@@ -11,9 +11,6 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   import c.universe._
   import mm._
 
-  /**
-   * Constructs expression to write given value expression
-   */
   private def writePrimitive(tpe: c.Type)(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Any]): c.Expr[Unit] = {
     import c.universe.definitions._
     if      (tpe =:= IntTpe)         reify { out.splice.writeInt32(number.splice, value.asInstanceOf[c.Expr[Int]].splice)     }
@@ -56,9 +53,6 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
     }
   }
 
-  /**
-   * Constructs expression to calculate size of given primitive value field
-   */
   private def sizeOfPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Any]): c.Expr[Int] = {
     val sizeNoTag = sizeOfPrimitiveNoTag(tpe)(value)
     reify {
@@ -107,7 +101,6 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
     CodedOutputStream.computeTagSize(number.splice)
   }
 
-  // Misc
   private def writeEmbeddedMessageTagAndSize(out: c.Expr[CodedOutputStream], number: c.Expr[Int], size: c.Expr[Int]): List[c.Expr[Unit]] =
     List(reify {
       out.splice.writeTag(number.splice, WireFormat.WIRETYPE_LENGTH_DELIMITED)
