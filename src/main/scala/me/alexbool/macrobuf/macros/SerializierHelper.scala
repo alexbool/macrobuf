@@ -68,13 +68,13 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
 
   private def sizeOfPrimitiveNoTag(tpe: c.Type)(value: c.Expr[Any]): c.Expr[Int] = {
     import c.universe.definitions._
-    if      (tpe =:= IntTpe)         sizeOfInt(value.asInstanceOf[c.Expr[Int]])
-    else if (tpe =:= LongTpe)        sizeOfLong(value.asInstanceOf[c.Expr[Long]])
-    else if (tpe =:= ShortTpe)       sizeOfShort(value.asInstanceOf[c.Expr[Short]])
-    else if (tpe =:= BooleanTpe)     sizeOfBoolean(value.asInstanceOf[c.Expr[Boolean]])
-    else if (tpe =:= FloatTpe)       sizeOfFloat(value.asInstanceOf[c.Expr[Float]])
-    else if (tpe =:= DoubleTpe)      sizeOfDouble(value.asInstanceOf[c.Expr[Double]])
-    else if (tpe =:= typeOf[String]) sizeOfString(value.asInstanceOf[c.Expr[String]])
+    if      (tpe =:= IntTpe)         reify { CodedOutputStream.computeInt32SizeNoTag(value.asInstanceOf[c.Expr[Int]].splice)     }
+    else if (tpe =:= LongTpe)        reify { CodedOutputStream.computeInt64SizeNoTag(value.asInstanceOf[c.Expr[Long]].splice)    }
+    else if (tpe =:= ShortTpe)       reify { CodedOutputStream.computeInt32SizeNoTag(value.asInstanceOf[c.Expr[Short]].splice)   }
+    else if (tpe =:= BooleanTpe)     reify { CodedOutputStream.computeBoolSizeNoTag(value.asInstanceOf[c.Expr[Boolean]].splice)  }
+    else if (tpe =:= FloatTpe)       reify { CodedOutputStream.computeFloatSizeNoTag(value.asInstanceOf[c.Expr[Float]].splice)   }
+    else if (tpe =:= DoubleTpe)      reify { CodedOutputStream.computeDoubleSizeNoTag(value.asInstanceOf[c.Expr[Double]].splice) }
+    else if (tpe =:= typeOf[String]) reify { CodedOutputStream.computeStringSizeNoTag(value.asInstanceOf[c.Expr[String]].splice) }
     else throw new IllegalArgumentException("Unsupported primitive type")
   }
 
@@ -106,42 +106,6 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   private def sizeOfTag(number: c.Expr[Int]): c.Expr[Int] = reify {
     CodedOutputStream.computeTagSize(number.splice)
   }
-
-  // Size calculators
-  private def sizeOfInt(value: c.Expr[Int]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeInt32SizeNoTag(value.splice)
-    }
-
-  private def sizeOfLong(value: c.Expr[Long]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeInt64SizeNoTag(value.splice)
-    }
-
-  private def sizeOfShort(value: c.Expr[Short]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeInt32SizeNoTag(value.splice)
-    }
-
-  private def sizeOfBoolean(value: c.Expr[Boolean]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeBoolSizeNoTag(value.splice)
-    }
-
-  private def sizeOfFloat(value: c.Expr[Float]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeFloatSizeNoTag(value.splice)
-    }
-
-  private def sizeOfDouble(value: c.Expr[Double]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeDoubleSizeNoTag(value.splice)
-    }
-
-  private def sizeOfString(value: c.Expr[String]): c.Expr[Int] =
-    reify {
-      CodedOutputStream.computeStringSizeNoTag(value.splice)
-    }
 
   // Misc
   private def writeEmbeddedMessageTagAndSize(out: c.Expr[CodedOutputStream], number: c.Expr[Int], size: c.Expr[Int]): List[c.Expr[Unit]] =
