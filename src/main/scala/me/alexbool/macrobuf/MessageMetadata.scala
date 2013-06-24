@@ -42,14 +42,14 @@ class MessageMetadata[U <: Universe](val u: U) {
     def messageName = actualType.typeSymbol.name.decoded
   }
 
-  case class Primitive private[macrobuf] (number: Int, getter: Getter, optional: Boolean) extends Scalar
-  case class EmbeddedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field], optional: Boolean) extends Scalar with MessageField
+  case class Primitive private[MessageMetadata] (number: Int, getter: Getter, optional: Boolean) extends Scalar
+  case class EmbeddedMessage private[MessageMetadata] (number: Int, getter: Getter, fields: Seq[Field], optional: Boolean) extends Scalar with MessageField
 
   sealed trait Repeated extends Field
-  case class RepeatedPrimitive private[macrobuf] (number: Int, getter: Getter, packed: Boolean) extends Repeated {
+  case class RepeatedPrimitive private[MessageMetadata] (number: Int, getter: Getter, packed: Boolean) extends Repeated {
     if (packed) require(isStrictlyPrimitive(this.actualType), "Only primitive type fields can be packed")
   }
-  case class RepeatedMessage private[macrobuf] (number: Int, getter: Getter, fields: Seq[Field]) extends Repeated with MessageField
+  case class RepeatedMessage private[MessageMetadata] (number: Int, getter: Getter, fields: Seq[Field]) extends Repeated with MessageField
 
   def apply[T](implicit tt: WeakTypeTag[T]): RootMessage = apply(tt.tpe)
   def apply(tpe: Type): RootMessage = RootMessage(tpe.typeSymbol.name.decoded, fieldsFor(tpe), tpe)
