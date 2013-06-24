@@ -24,7 +24,7 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     else throw new IllegalArgumentException("Unsupported primitive type")
   }
 
-  private def parsePrimitiveAndRequireWireFormat(tpe: c.Type, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
+  private def parsePrimitiveAndRequireWireType(tpe: c.Type, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = {
     val requireWireTypeExpr = requireWireTypeForPrimitive(tpe, tag)
     val parseExpr = parsePrimitive(tpe, in)
     // XXX Flatten 'require' block of exprs
@@ -53,7 +53,7 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
 
   private def parseField(f: Field, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Any] = f match {
     case f: RepeatedPrimitive if f.packed    => parsePackedRepeatedField(f, tag, in)
-    case _: Primitive | _: RepeatedPrimitive => parsePrimitiveAndRequireWireFormat(f.actualType, tag, in)
+    case _: Primitive | _: RepeatedPrimitive => parsePrimitiveAndRequireWireType(f.actualType, tag, in)
     case m: MessageField                     => parseDelimited(m, in)
   }
 
