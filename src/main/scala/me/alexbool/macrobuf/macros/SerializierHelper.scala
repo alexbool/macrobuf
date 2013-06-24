@@ -16,92 +16,26 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
    */
   private def writePrimitive(tpe: c.Type)(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Any]): c.Expr[Unit] = {
     import c.universe.definitions._
-    if      (tpe =:= IntTpe)         writeInt(out, number, value.asInstanceOf[c.Expr[Int]])
-    else if (tpe =:= LongTpe)        writeLong(out, number, value.asInstanceOf[c.Expr[Long]])
-    else if (tpe =:= ShortTpe)       writeShort(out, number, value.asInstanceOf[c.Expr[Short]])
-    else if (tpe =:= BooleanTpe)     writeBoolean(out, number, value.asInstanceOf[c.Expr[Boolean]])
-    else if (tpe =:= FloatTpe)       writeFloat(out, number, value.asInstanceOf[c.Expr[Float]])
-    else if (tpe =:= DoubleTpe)      writeDouble(out, number, value.asInstanceOf[c.Expr[Double]])
-    else if (tpe =:= typeOf[String]) writeString(out, number, value.asInstanceOf[c.Expr[String]])
+    if      (tpe =:= IntTpe)         reify { out.splice.writeInt32(number.splice, value.asInstanceOf[c.Expr[Int]].splice)     }
+    else if (tpe =:= LongTpe)        reify { out.splice.writeInt64(number.splice, value.asInstanceOf[c.Expr[Long]].splice)    }
+    else if (tpe =:= ShortTpe)       reify { out.splice.writeInt32(number.splice, value.asInstanceOf[c.Expr[Short]].splice)   }
+    else if (tpe =:= BooleanTpe)     reify { out.splice.writeBool(number.splice, value.asInstanceOf[c.Expr[Boolean]].splice)  }
+    else if (tpe =:= FloatTpe)       reify { out.splice.writeFloat(number.splice, value.asInstanceOf[c.Expr[Float]].splice)   }
+    else if (tpe =:= DoubleTpe)      reify { out.splice.writeDouble(number.splice, value.asInstanceOf[c.Expr[Double]].splice) }
+    else if (tpe =:= typeOf[String]) reify { out.splice.writeString(number.splice, value.asInstanceOf[c.Expr[String]].splice) }
     else throw new IllegalArgumentException("Unsupported primitive type")
   }
-
-  // Serializiers for various primitive types
-  // XXX Inline all those methods
-  private def writeInt(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Int]): c.Expr[Unit] =
-    reify {
-      out.splice.writeInt32(number.splice, value.splice)
-    }
-
-  private def writeLong(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Long]): c.Expr[Unit] =
-    reify {
-      out.splice.writeInt64(number.splice, value.splice)
-    }
-
-  private def writeShort(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Short]): c.Expr[Unit] =
-    reify {
-      out.splice.writeInt32(number.splice, value.splice)
-    }
-
-  private def writeBoolean(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Boolean]): c.Expr[Unit] =
-    reify {
-      out.splice.writeBool(number.splice, value.splice)
-    }
-
-  private def writeFloat(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Float]): c.Expr[Unit] =
-    reify {
-      out.splice.writeFloat(number.splice, value.splice)
-    }
-
-  private def writeDouble(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[Double]): c.Expr[Unit] =
-    reify {
-      out.splice.writeDouble(number.splice, value.splice)
-    }
-
-  private def writeString(out: c.Expr[CodedOutputStream], number: c.Expr[Int], value: c.Expr[String]): c.Expr[Unit] =
-    reify {
-      out.splice.writeString(number.splice, value.splice)
-    }
 
   private def writePrimitiveNoTag(tpe: c.Type)(out: c.Expr[CodedOutputStream], value: c.Expr[Any]): c.Expr[Unit] = {
     import c.universe.definitions._
-    if      (tpe =:= IntTpe)         writeIntNoTag(out, value.asInstanceOf[c.Expr[Int]])
-    else if (tpe =:= LongTpe)        writeLongNoTag(out, value.asInstanceOf[c.Expr[Long]])
-    else if (tpe =:= ShortTpe)       writeShortNoTag(out, value.asInstanceOf[c.Expr[Short]])
-    else if (tpe =:= BooleanTpe)     writeBooleanNoTag(out, value.asInstanceOf[c.Expr[Boolean]])
-    else if (tpe =:= FloatTpe)       writeFloatNoTag(out, value.asInstanceOf[c.Expr[Float]])
-    else if (tpe =:= DoubleTpe)      writeDoubleNoTag(out, value.asInstanceOf[c.Expr[Double]])
-    else if (tpe =:= typeOf[String]) writeStringNoTag(out, value.asInstanceOf[c.Expr[String]])
+    if      (tpe =:= IntTpe)         reify { out.splice.writeInt32NoTag(value.asInstanceOf[c.Expr[Int]].splice)     }
+    else if (tpe =:= LongTpe)        reify { out.splice.writeInt64NoTag(value.asInstanceOf[c.Expr[Long]].splice)    }
+    else if (tpe =:= ShortTpe)       reify { out.splice.writeInt32NoTag(value.asInstanceOf[c.Expr[Short]].splice)   }
+    else if (tpe =:= BooleanTpe)     reify { out.splice.writeBoolNoTag(value.asInstanceOf[c.Expr[Boolean]].splice)  }
+    else if (tpe =:= FloatTpe)       reify { out.splice.writeFloatNoTag(value.asInstanceOf[c.Expr[Float]].splice)   }
+    else if (tpe =:= DoubleTpe)      reify { out.splice.writeDoubleNoTag(value.asInstanceOf[c.Expr[Double]].splice) }
+    else if (tpe =:= typeOf[String]) reify { out.splice.writeStringNoTag(value.asInstanceOf[c.Expr[String]].splice) }
     else throw new IllegalArgumentException("Unsupported primitive type")
-  }
-
-  // XXX Inline all those methods
-  private def writeIntNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Int]): c.Expr[Unit] = reify {
-    out.splice.writeInt32NoTag(value.splice)
-  }
-
-  private def writeLongNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Long]): c.Expr[Unit] = reify {
-    out.splice.writeInt64NoTag(value.splice)
-  }
-
-  private def writeShortNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Short]): c.Expr[Unit] = reify {
-    out.splice.writeInt32NoTag(value.splice)
-  }
-
-  private def writeBooleanNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Boolean]): c.Expr[Unit] = reify {
-    out.splice.writeBoolNoTag(value.splice)
-  }
-
-  private def writeFloatNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Float]): c.Expr[Unit] = reify {
-    out.splice.writeFloatNoTag(value.splice)
-  }
-
-  private def writeDoubleNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[Double]): c.Expr[Unit] = reify {
-    out.splice.writeDoubleNoTag(value.splice)
-  }
-
-  private def writeStringNoTag(out: c.Expr[CodedOutputStream], value: c.Expr[String]): c.Expr[Unit] = reify {
-    out.splice.writeStringNoTag(value.splice)
   }
 
   private def optional[T](option: c.Expr[Option[T]], body: c.Expr[T] => c.Expr[Unit]): c.Expr[Unit] = {
