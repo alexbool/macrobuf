@@ -14,13 +14,13 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
 
   private def parsePrimitive(tpe: c.Type, in: c.Expr[CodedInputStream]): c.Expr[Any] = {
     import c.universe.definitions._
-    if      (tpe =:= IntTpe)         readInt(in)
-    else if (tpe =:= LongTpe)        readLong(in)
-    else if (tpe =:= ShortTpe)       readShort(in)
-    else if (tpe =:= BooleanTpe)     readBoolean(in)
-    else if (tpe =:= FloatTpe)       readFloat(in)
-    else if (tpe =:= DoubleTpe)      readDouble(in)
-    else if (tpe =:= typeOf[String]) readString(in)
+    if      (tpe =:= IntTpe)         reify { in.splice.readInt32()         }
+    else if (tpe =:= LongTpe)        reify { in.splice.readInt64()         }
+    else if (tpe =:= ShortTpe)       reify { in.splice.readInt32().toShort }
+    else if (tpe =:= BooleanTpe)     reify { in.splice.readBool()          }
+    else if (tpe =:= FloatTpe)       reify { in.splice.readFloat()         }
+    else if (tpe =:= DoubleTpe)      reify { in.splice.readDouble()        }
+    else if (tpe =:= typeOf[String]) reify { in.splice.readString()        }
     else throw new IllegalArgumentException("Unsupported primitive type")
   }
 
@@ -30,15 +30,6 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     // XXX Flatten 'require' block of exprs
     reify { requireWireTypeExpr.splice; parseExpr.splice }
   }
-
-  // Parsers for primitive types
-  private def readInt(in: c.Expr[CodedInputStream]): c.Expr[Int]         = reify { in.splice.readInt32() }
-  private def readLong(in: c.Expr[CodedInputStream]): c.Expr[Long]       = reify { in.splice.readInt64() }
-  private def readShort(in: c.Expr[CodedInputStream]): c.Expr[Short]     = reify { in.splice.readInt32().toShort }
-  private def readBoolean(in: c.Expr[CodedInputStream]): c.Expr[Boolean] = reify { in.splice.readBool() }
-  private def readFloat(in: c.Expr[CodedInputStream]): c.Expr[Float]     = reify { in.splice.readFloat() }
-  private def readDouble(in: c.Expr[CodedInputStream]): c.Expr[Double]   = reify { in.splice.readDouble() }
-  private def readString(in: c.Expr[CodedInputStream]): c.Expr[String]   = reify { in.splice.readString() }
 
   private def requireWireFormat(tag: c.Expr[Int], wf: Int): c.Expr[Unit] = {
     val wfExpr = c.Expr[Int](Literal(Constant(wf)))
