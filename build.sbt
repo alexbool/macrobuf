@@ -14,4 +14,6 @@ libraryDependencies ++= Seq(
 
 scalacOptions ++= Seq("-feature", "-deprecation")
 
+org.scalastyle.sbt.ScalastylePlugin.Settings
+
 fork := true
