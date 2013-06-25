@@ -2,10 +2,10 @@ package me.alexbool.macrobuf
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, OutputStream}
 
-trait Serializer[Message] {
-  def serialize(obj: Message, output: OutputStream)
+trait Serializer[M] {
+  def serialize(obj: M, output: OutputStream)
 
-  def serialize(obj: Message): Array[Byte] = {
+  def serialize(obj: M): Array[Byte] = {
     val output = new ByteArrayOutputStream
     try {
       serialize(obj, output)
@@ -16,10 +16,10 @@ trait Serializer[Message] {
   }
 }
 
-trait Parser[Message] {
-  def parse(input: InputStream): Message
+trait Parser[M] {
+  def parse(input: InputStream): M
 
-  def parse(data: Array[Byte]): Message = {
+  def parse(data: Array[Byte]): M = {
     val input = new ByteArrayInputStream(data)
     try {
       parse(input)
@@ -29,4 +29,4 @@ trait Parser[Message] {
   }
 }
 
-trait ParserSerializer[T] extends Parser[T] with Serializer[T]
+trait ParserSerializer[M] extends Parser[M] with Serializer[M]
