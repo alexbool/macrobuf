@@ -5,7 +5,7 @@
     <artifactId>macrobuf</artifactId>
     <version>0.1-SNAPSHOT</version>
     <properties>
-        <scala-version>2.10.2</scala-version>
+        <scala-version>2.10.3</scala-version>
         <protobuf-version>2.5.0</protobuf-version>
         <scalatest-version>2.0.M6-SNAP8</scalatest-version>
     </properties>
