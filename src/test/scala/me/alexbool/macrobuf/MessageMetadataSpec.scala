@@ -1,11 +1,11 @@
 package me.alexbool.macrobuf
 
 import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import MessageMetadata.runtime._
 import me.alexbool.macrobuf.annotation.packed
 
-class MessageMetadataSpec extends WordSpec with MustMatchers {
+class MessageMetadataSpec extends WordSpec with Matchers {
 
   case class Message1(number: Int)
   case class Message2(numbers: Iterable[Int])
@@ -15,56 +15,56 @@ class MessageMetadataSpec extends WordSpec with MustMatchers {
   case class Message6(@packed numbers: Iterable[Int])
   case class Message7(@packed numbers: Iterable[String])
 
-  "RootMessage factory" must {
+  "RootMessage factory" should {
     "construct tree for plain types" in {
       val rm = MessageMetadata.runtime[Message1]
-      rm.messageName must be ("Message1")
-      rm.fields must have size (1)
-      rm.fields.head.number must be (1)
-      rm.fields.head.fieldName must be ("number")
-      rm.fields.head.isInstanceOf[Primitive] must be (true)
-      rm.fields.head.asInstanceOf[Primitive].optional must be (false)
+      rm.messageName should be ("Message1")
+      rm.fields should have size (1)
+      rm.fields.head.number should be (1)
+      rm.fields.head.fieldName should be ("number")
+      rm.fields.head.isInstanceOf[Primitive] should be (true)
+      rm.fields.head.asInstanceOf[Primitive].optional should be (false)
     }
     "construct tree for types with repeated fields" in {
       val rm = MessageMetadata.runtime[Message2]
-      rm.messageName must be ("Message2")
-      rm.fields must have size (1)
-      rm.fields.head.number must be (1)
-      rm.fields.head.isInstanceOf[RepeatedPrimitive] must be (true)
+      rm.messageName should be ("Message2")
+      rm.fields should have size (1)
+      rm.fields.head.number should be (1)
+      rm.fields.head.isInstanceOf[RepeatedPrimitive] should be (true)
     }
     "construct tree for types with optional fields" in {
       val rm = MessageMetadata.runtime[Message3]
-      rm.messageName must be ("Message3")
-      rm.fields must have size (2)
-      rm.fields.head.isInstanceOf[Primitive] must be (true)
-      rm.fields.head.asInstanceOf[Primitive].optional must be (false)
-      rm.fields(1).isInstanceOf[EmbeddedMessage] must be (true)
-      rm.fields(1).number must be (2)
-      rm.fields(1).asInstanceOf[EmbeddedMessage].optional must be (true)
-      rm.fields(1).asInstanceOf[EmbeddedMessage].messageName must be ("Message2")
+      rm.messageName should be ("Message3")
+      rm.fields should have size (2)
+      rm.fields.head.isInstanceOf[Primitive] should be (true)
+      rm.fields.head.asInstanceOf[Primitive].optional should be (false)
+      rm.fields(1).isInstanceOf[EmbeddedMessage] should be (true)
+      rm.fields(1).number should be (2)
+      rm.fields(1).asInstanceOf[EmbeddedMessage].optional should be (true)
+      rm.fields(1).asInstanceOf[EmbeddedMessage].messageName should be ("Message2")
     }
     "construct tree for types with repeated message fields" in {
       val rm = MessageMetadata.runtime[Message4]
-      rm.messageName must be ("Message4")
-      rm.fields must have size (2)
-      rm.fields.head.number must be (1)
-      rm.fields.head.fieldName must be ("name")
-      rm.fields.head.isInstanceOf[Primitive] must be (true)
-      rm.fields.head.asInstanceOf[Primitive].optional must be (true)
-      rm.fields(1).isInstanceOf[RepeatedMessage] must be (true)
-      rm.fields(1).number must be (2)
-      rm.fields(1).asInstanceOf[RepeatedMessage].messageName must be ("Message1")
+      rm.messageName should be ("Message4")
+      rm.fields should have size (2)
+      rm.fields.head.number should be (1)
+      rm.fields.head.fieldName should be ("name")
+      rm.fields.head.isInstanceOf[Primitive] should be (true)
+      rm.fields.head.asInstanceOf[Primitive].optional should be (true)
+      rm.fields(1).isInstanceOf[RepeatedMessage] should be (true)
+      rm.fields(1).number should be (2)
+      rm.fields(1).asInstanceOf[RepeatedMessage].messageName should be ("Message1")
     }
     "construct tree for types with required embedded fields" in {
       val rm = MessageMetadata.runtime[Message5]
-      rm.fields.head.isInstanceOf[EmbeddedMessage] must be (true)
-      rm.fields.head.asInstanceOf[EmbeddedMessage].optional must be (false)
+      rm.fields.head.isInstanceOf[EmbeddedMessage] should be (true)
+      rm.fields.head.asInstanceOf[EmbeddedMessage].optional should be (false)
     }
     "handle packed repeated fields" in {
       val rm = MessageMetadata.runtime[Message6]
-      rm.fields.head.isInstanceOf[RepeatedPrimitive] must be (true)
-      rm.fields.head.asInstanceOf[RepeatedPrimitive].packed must be (true)
-      evaluating { MessageMetadata.runtime[Message7] } must produce [IllegalArgumentException]
+      rm.fields.head.isInstanceOf[RepeatedPrimitive] should be (true)
+      rm.fields.head.asInstanceOf[RepeatedPrimitive].packed should be (true)
+      evaluating { MessageMetadata.runtime[Message7] } should produce [IllegalArgumentException]
     }
   }
 }
