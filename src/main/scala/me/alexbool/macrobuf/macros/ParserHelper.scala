@@ -69,7 +69,7 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     // 9. PROFIT!!!
     val varDefs = declareVars(m)
     val varDefsStmts = varDefs.values.to[List]
-    val tag = c.Expr[Int](Ident(newTermName("tag")))
+    val tag = c.Expr[Int](Ident(TermName("tag")))
     val matchOnNumber = c.Expr[Unit](patternMatchOnFieldNumber(varDefs, tag, in))
     val checkAllRequiredFieldsAreProvidedStmts = checkAllRequiredFieldsAreProvided(varDefs)
     val constructMessageExpr = constructMessage[T](m, varDefs)
@@ -109,10 +109,10 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     // XXX Hack! Wait for quasiquotes and just write q"new Iterator[${f.actualType}] { ... }"
     c.Expr(
       TypeApply(
-        Select(tree, newTermName("asInstanceOf")),
+        Select(tree, TermName("asInstanceOf")),
         List(
           AppliedTypeTree(
-            Ident(newTypeName("Seq")),
+            Ident(TypeName("Seq")),
             List(TypeTree(f.actualType)
             )
           )
@@ -124,14 +124,14 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   private def declareVars(m: Message): Map[Field, ValDef] = {
     def varDefForField(f: Field): ValDef = {
       val tpt: Tree = f match {
-        case f: Scalar   => AppliedTypeTree(Ident(newTypeName("Option")), List(TypeTree(f.actualType)))
-        case f: Repeated => AppliedTypeTree(Ident(newTypeName("Seq")), List(TypeTree(f.actualType)))
+        case f: Scalar   => AppliedTypeTree(Ident(TypeName("Option")), List(TypeTree(f.actualType)))
+        case f: Repeated => AppliedTypeTree(Ident(TypeName("Seq")), List(TypeTree(f.actualType)))
       }
       val rhs: Tree = f match {
         case f: Scalar   => reify { None  }.tree
         case f: Repeated => reify { Seq() }.tree
       }
-      ValDef(Modifiers(Flag.MUTABLE), newTermName(s"${f.fieldName}${f.number}"), tpt, rhs)
+      ValDef(Modifiers(Flag.MUTABLE), TermName(s"${f.fieldName}${f.number}"), tpt, rhs)
     }
     m.fields.map(f => (f, varDefForField(f))).toMap
   }
@@ -140,7 +140,7 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     val cases: List[CaseDef] = varDefs.to[List].map(fieldAndVar => {
       CaseDef(Literal(Constant(fieldAndVar._1.number)), EmptyTree, readField(fieldAndVar._1, Ident(fieldAndVar._2.name), tag, in))
     })
-    Match(Ident(newTermName("number")), cases)
+    Match(Ident(TermName("number")), cases)
   }
 
   private def readField(f: Field, readIntoVar: Ident, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Tree = {
@@ -165,7 +165,7 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   private def constructMessage[T](m: Message, varDefs: Map[Field, ValDef]): c.Expr[T] = {
     val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
       fieldAndVarDef._1 match {
-        case f: Scalar if !f.optional => Select(Ident(fieldAndVarDef._2.name), newTermName("get"))
+        case f: Scalar if !f.optional => Select(Ident(fieldAndVarDef._2.name), TermName("get"))
         case _                        => Ident(fieldAndVarDef._2.name)
       }
     }

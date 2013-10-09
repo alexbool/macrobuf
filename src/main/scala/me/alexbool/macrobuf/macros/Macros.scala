@@ -14,8 +14,8 @@ object Macros {
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
     val fs = c.Expr(
-      Block(helper.serializeMessage(rm, c.Expr[T](Ident(newTermName("obj"))),
-        c.Expr[CodedOutputStream](Ident(newTermName("output"))))
+      Block(helper.serializeMessage(rm, c.Expr[T](Ident(TermName("obj"))),
+        c.Expr[CodedOutputStream](Ident(TermName("output"))))
         .map(_.tree),
         Literal(Constant(()))))
 
@@ -37,11 +37,11 @@ object Macros {
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
     val fs = c.Expr(
-      Block(helper.serializeMessage(rm, c.Expr[T](Ident(newTermName("obj"))),
-        c.Expr[CodedOutputStream](Ident(newTermName("output"))))
+      Block(helper.serializeMessage(rm, c.Expr[T](Ident(TermName("obj"))),
+        c.Expr[CodedOutputStream](Ident(TermName("output"))))
         .map(_.tree),
         Literal(Constant(()))))
-    val ms = helper.messageSize(rm, c.Expr[T](Ident(newTermName("obj"))))
+    val ms = helper.messageSize(rm, c.Expr[T](Ident(TermName("obj"))))
 
     val resultingSerializer = reify {
       new ListMacroSerializerBase[T] {
@@ -61,7 +61,7 @@ object Macros {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
-    val parseExpr = helper.parseMessage[T](rm, c.Expr[CodedInputStream](Ident(newTermName("input"))))
+    val parseExpr = helper.parseMessage[T](rm, c.Expr[CodedInputStream](Ident(TermName("input"))))
 
     val resultingParser = reify {
       new MacroParserBase[T] {
@@ -78,7 +78,7 @@ object Macros {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
-    val parseExpr = helper.parseDelimited[T](rm, c.Expr[CodedInputStream](Ident(newTermName("input"))))
+    val parseExpr = helper.parseDelimited[T](rm, c.Expr[CodedInputStream](Ident(TermName("input"))))
 
     val resultingParser = reify {
       new ListMacroParserBase[T] {

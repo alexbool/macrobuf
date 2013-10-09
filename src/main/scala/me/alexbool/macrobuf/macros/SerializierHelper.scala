@@ -45,7 +45,7 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   }
 
   private def repeated[T](collection: c.Expr[Seq[T]], body: c.Expr[T] => c.Expr[Unit]): c.Expr[Unit] = {
-    val readyBody = body(c.Expr(Ident(newTermName("msg"))))
+    val readyBody = body(c.Expr(Ident(TermName("msg"))))
     reify {
       for (msg <- collection.splice) {
         readyBody.splice
@@ -75,8 +75,8 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   private def sizeOfRepeatedPrimitive(tpe: c.Type)(number: c.Expr[Int], value: c.Expr[Iterable[Any]]): c.Expr[Int] = {
     val mapper =
       Function(
-        List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
-        sizeOfPrimitive(tpe)(number, c.Expr(Ident(newTermName("m")))).tree
+        List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
+        sizeOfPrimitive(tpe)(number, c.Expr(Ident(TermName("m")))).tree
       )
     sizeOfRepeated(value, c.Expr(mapper))
   }
@@ -84,8 +84,8 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
   private def sizeOfPackedRepeatedPrimitive(tpe: c.Type)(value: c.Expr[Iterable[Any]]): c.Expr[Int] = {
     val mapper =
       Function(
-        List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
-        sizeOfPrimitiveNoTag(tpe)(c.Expr(Ident(newTermName("m")))).tree
+        List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(tpe.typeSymbol), EmptyTree)),
+        sizeOfPrimitiveNoTag(tpe)(c.Expr(Ident(TermName("m")))).tree
       )
     val sizeNoTag = sizeOfRepeated(value, c.Expr(mapper))
     reify {
@@ -172,8 +172,8 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
       case f: Primitive if f.optional => {
           val mapper =
             Function(
-              List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
-              sizeOfPrimitive(f.actualType)(toExpr(f.number), c.Expr(Ident(newTermName("m")))).tree
+              List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
+              sizeOfPrimitive(f.actualType)(toExpr(f.number), c.Expr(Ident(TermName("m")))).tree
             )
           val mappedOption = mapOption[Any, Int](fieldValue[Option[Any]](obj, f), c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
@@ -190,8 +190,8 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
       case f: EmbeddedMessage if f.optional => {
           val mapper =
             Function(
-              List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
-              messageSizeWithTag(f, c.Expr(Ident(newTermName("m")))).tree
+              List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
+              messageSizeWithTag(f, c.Expr(Ident(TermName("m")))).tree
             )
           val mappedOption = mapOption[Any, Int](fieldValue[Option[Any]](obj, f), c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
@@ -200,8 +200,8 @@ private[macros] class SerializierHelper[C <: Context](val c: C) {
       case f: RepeatedMessage => {
         val mapper =
           Function(
-            List(ValDef(Modifiers(Flag.PARAM), newTermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
-            messageSizeWithTag(f, c.Expr(Ident(newTermName("m")))).tree
+            List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
+            messageSizeWithTag(f, c.Expr(Ident(TermName("m")))).tree
           )
         sizeOfRepeated(fieldValue[Iterable[Any]](obj, f), c.Expr(mapper))
       }
