@@ -72,6 +72,7 @@ object Macros {
     }
     resultingParser
   }
+
   def listParser[T: c.WeakTypeTag](c: Context): c.Expr[Parser[Seq[T]]] = {
     import c.universe._
 
