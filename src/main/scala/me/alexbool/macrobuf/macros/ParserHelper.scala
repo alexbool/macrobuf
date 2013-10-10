@@ -95,30 +95,17 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   }
 
   private def parsePackedRepeatedField(f: RepeatedPrimitive, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): c.Expr[Seq[Any]] = {
-    val tree = reify {
-      requireWireFormat(tag, WIRETYPE_LENGTH_DELIMITED).splice
-      val length = in.splice.readRawVarint32()
-      val oldLimit = in.splice.pushLimit(length)
-      val result = new Iterator[Any] {
-        def hasNext = !in.splice.isAtEnd
-        def next() = parsePrimitive(f.actualType, in).splice
+    c.Expr[Seq[Any]](q"""
+      ${requireWireFormat(tag, WIRETYPE_LENGTH_DELIMITED)}
+      val length = $in.readRawVarint32()
+      val oldLimit = $in.pushLimit(length)
+      val result = new Iterator[${f.actualType}] {
+        def hasNext = !$in.isAtEnd
+        def next() = ${parsePrimitive(f.actualType, in)}
       }.to[Seq]
-      in.splice.popLimit(oldLimit)
+      $in.popLimit(oldLimit)
       result
-    }.tree
-    // XXX Hack! Wait for quasiquotes and just write q"new Iterator[${f.actualType}] { ... }"
-    c.Expr(
-      TypeApply(
-        Select(tree, TermName("asInstanceOf")),
-        List(
-          AppliedTypeTree(
-            Ident(TypeName("Seq")),
-            List(TypeTree(f.actualType)
-            )
-          )
-        )
-      )
-    )
+    """)
   }
 
   private def declareVars(m: Message): Map[Field, ValDef] = {
