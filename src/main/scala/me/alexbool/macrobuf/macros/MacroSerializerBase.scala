@@ -4,7 +4,7 @@ import me.alexbool.macrobuf.Serializer
 import java.io.OutputStream
 import com.google.protobuf.CodedOutputStream
 
-trait MacroSerializerBase[T] extends Serializer[T] {
+abstract class MacroSerializerBase[T] extends Serializer[T] {
   def serialize(obj: T, output: OutputStream) {
     val cos = CodedOutputStream.newInstance(output)
     serialize(obj, cos)
@@ -14,7 +14,7 @@ trait MacroSerializerBase[T] extends Serializer[T] {
   protected def serialize(obj: T, output: CodedOutputStream)
 }
 
-trait ListMacroSerializerBase[T] extends Serializer[Iterable[T]] {
+abstract class ListMacroSerializerBase[T] extends Serializer[Iterable[T]] {
   def serialize(objs: Iterable[T], output: OutputStream) {
     val cos = CodedOutputStream.newInstance(output)
     for (obj <- objs) {

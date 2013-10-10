@@ -4,7 +4,7 @@ import me.alexbool.macrobuf.Parser
 import java.io.InputStream
 import com.google.protobuf.CodedInputStream
 
-trait MacroParserBase[T] extends Parser[T] {
+abstract class MacroParserBase[T] extends Parser[T] {
   def parse(input: InputStream): T = {
      val codedIn = CodedInputStream.newInstance(input)
      parse(codedIn)
@@ -13,7 +13,7 @@ trait MacroParserBase[T] extends Parser[T] {
   protected def parse(input: CodedInputStream): T
 }
 
-trait ListMacroParserBase[T] extends Parser[Seq[T]] {
+abstract class ListMacroParserBase[T] extends Parser[Seq[T]] {
   def parse(input: InputStream): Seq[T] = {
     val codedIn = CodedInputStream.newInstance(input)
     val buffer = collection.mutable.ListBuffer[T]()
