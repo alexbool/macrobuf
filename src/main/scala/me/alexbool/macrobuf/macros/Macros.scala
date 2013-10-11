@@ -1,14 +1,14 @@
 package me.alexbool.macrobuf.macros
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.Macro
 import me.alexbool.macrobuf._
 import com.google.protobuf.{CodedInputStream, CodedOutputStream}
 
-object Macros {
+trait Macros extends Macro {
 
-  def serializer[T: c.WeakTypeTag](c: Context): c.Expr[Serializer[T]] = {
-    import c.universe._
+  import c.universe._
 
+  def serializer[T: c.WeakTypeTag]: c.Expr[Serializer[T]] = {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new SerializierHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
@@ -29,9 +29,7 @@ object Macros {
     resultingSerializer
   }
 
-  def listSerializer[T: c.WeakTypeTag](c: Context): c.Expr[Serializer[Iterable[T]]] = {
-    import c.universe._
-
+  def listSerializer[T: c.WeakTypeTag]: c.Expr[Serializer[Iterable[T]]] = {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new SerializierHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
@@ -55,9 +53,7 @@ object Macros {
     resultingSerializer
   }
 
-  def parser[T: c.WeakTypeTag](c: Context): c.Expr[Parser[T]] = {
-    import c.universe._
-
+  def parser[T: c.WeakTypeTag]: c.Expr[Parser[T]] = {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
@@ -73,9 +69,7 @@ object Macros {
     resultingParser
   }
 
-  def listParser[T: c.WeakTypeTag](c: Context): c.Expr[Parser[Seq[T]]] = {
-    import c.universe._
-
+  def listParser[T: c.WeakTypeTag]: c.Expr[Parser[Seq[T]]] = {
     val tt = implicitly[c.WeakTypeTag[T]]
     val helper = new ParserHelper[c.type](c)
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
