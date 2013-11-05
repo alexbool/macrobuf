@@ -7,7 +7,7 @@
     <properties>
         <scala-version>2.11.0-M5</scala-version>
         <protobuf-version>2.5.0</protobuf-version>
-        <scalatest-version>2.0.M7</scalatest-version>
+        <scalatest-version>2.0</scalatest-version>
     </properties>
     <dependencies>
         <dependency>
@@ -98,7 +98,7 @@
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>1.0-M4-SNAP1</version>
+                <version>1.0-RC2</version>
                 <executions>
                     <execution>
                         <id>test</id>
