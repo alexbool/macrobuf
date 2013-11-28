@@ -1,10 +1,10 @@
 package me.alexbool.macrobuf.macros
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.WhiteboxContext
 import com.google.protobuf.{WireFormat, CodedOutputStream}
 import me.alexbool.macrobuf.MessageMetadata
 
-private[macros] class SerializierHelper[C <: Context](val c: C) {
+private[macros] class SerializierHelper[C <: WhiteboxContext](val c: C) {
 
   val mm = MessageMetadata[c.universe.type](c.universe)
 

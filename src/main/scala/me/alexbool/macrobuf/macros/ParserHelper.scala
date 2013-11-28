@@ -1,10 +1,10 @@
 package me.alexbool.macrobuf.macros
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.WhiteboxContext
 import me.alexbool.macrobuf.MessageMetadata
 import com.google.protobuf.{WireFormat, CodedInputStream}
 
-private[macros] class ParserHelper[C <: Context](val c: C) {
+private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
 
   val mm = MessageMetadata[c.universe.type](c.universe)
 

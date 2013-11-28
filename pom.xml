@@ -5,9 +5,9 @@
     <artifactId>macrobuf</artifactId>
     <version>0.1-SNAPSHOT</version>
     <properties>
-        <scala-version>2.11.0-M5</scala-version>
+        <scala-version>2.11.0-M7</scala-version>
         <protobuf-version>2.5.0</protobuf-version>
-        <scalatest-version>2.0.M7</scalatest-version>
+        <scalatest-version>2.0.1-SNAP4</scalatest-version>
     </properties>
     <dependencies>
         <dependency>
@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11.0-M5</artifactId>
+            <artifactId>scalatest_2.11.0-M7</artifactId>
             <version>${scalatest-version}</version>
             <scope>test</scope>
         </dependency>
