@@ -48,7 +48,7 @@ object Benchmark extends App {
   val serializedWithReflection = serialize(data, reflectionSerializer)
   println("Macro")
   val serializedWithMacro = serialize(data, macroSerializer)
-  require(serializedWithReflection == serializedWithMacro,
+  require(serializedWithReflection.deep == serializedWithMacro.deep,
     "Same data serialized by reflection serializer and macro serializer must be equal")
 
   println("-------Parsing-------")
