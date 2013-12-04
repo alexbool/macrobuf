@@ -30,7 +30,7 @@ class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
   }
 }
 
-private[macrobuf] class ReflectionMessageSerializer(message: Message) extends MessageSerializier {
+private[macrobuf] class ReflectionMessageSerializer(message: Message) extends MessageFieldSerializer {
 
   private class FieldAndSerializer(val field: Field, val serializer: FieldSerializer[Any])
 

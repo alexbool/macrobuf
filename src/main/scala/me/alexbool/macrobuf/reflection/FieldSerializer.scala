@@ -151,7 +151,7 @@ object FieldSerializers {
   }
 }
 
-trait MessageSerializier extends FieldSerializer[Any] {
+trait MessageFieldSerializer extends FieldSerializer[Any] {
   /**
    * Actually serialize message
    */
