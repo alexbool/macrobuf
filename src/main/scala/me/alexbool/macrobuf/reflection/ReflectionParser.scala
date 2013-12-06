@@ -10,18 +10,16 @@ import MessageMetadata.runtime._
 class ReflectionParser[T](tpe: Type) extends Parser[T] {
   private val parser = new ReflectionMessageParser(MessageMetadata.runtime(tpe))
 
-  def parse(input: InputStream) = {
-    val codedIn = CodedInputStream.newInstance(input)
-    parser.parseUntilLimit(codedIn).asInstanceOf[T]
+  def parse(input: CodedInputStream) = {
+    parser.parseUntilLimit(input).asInstanceOf[T]
   }
 }
 
 class ListReflectionParser[T](tpe: Type) extends Parser[Seq[T]] {
   private val parser = new ReflectionMessageParser(MessageMetadata.runtime(tpe))
 
-  def parse(input: InputStream) = {
-    val codedIn = CodedInputStream.newInstance(input)
-    new ParseUntilLimitIterator(codedIn, parser.asInstanceOf[ScalarFieldParser[T]]).to[Seq]
+  def parse(input: CodedInputStream) = {
+    new ParseUntilLimitIterator(input, parser.asInstanceOf[ScalarFieldParser[T]]).to[Seq]
   }
 }
 

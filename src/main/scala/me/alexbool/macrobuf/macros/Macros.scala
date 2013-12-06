@@ -20,9 +20,10 @@ trait Macros extends WhiteboxMacro {
         Literal(Constant(()))))
 
     val resultingSerializer = reify {
-      new MacroSerializerBase[T] {
-        protected def serialize(obj: T, output: CodedOutputStream) {
+      new Serializer[T] {
+        def serialize(obj: T, output: CodedOutputStream) {
           fs.splice
+          output.flush()
         }
       }
     }
@@ -43,7 +44,7 @@ trait Macros extends WhiteboxMacro {
 
     val resultingSerializer = reify {
       new ListMacroSerializerBase[T] {
-        protected def serialize(obj: T, output: CodedOutputStream) {
+        protected def doSerialize(obj: T, output: CodedOutputStream) {
           fs.splice
         }
 
@@ -60,8 +61,8 @@ trait Macros extends WhiteboxMacro {
     val parseExpr = helper.parseMessage[T](rm, c.Expr[CodedInputStream](Ident(TermName("input"))))
 
     val resultingParser = reify {
-      new MacroParserBase[T] {
-        protected def parse(input: CodedInputStream) = {
+      new Parser[T] {
+        def parse(input: CodedInputStream) = {
           parseExpr.splice
         }
       }

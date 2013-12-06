@@ -11,21 +11,19 @@ import MessageMetadata.runtime._
 class ReflectionSerializer[T](tpe: Type) extends Serializer[T] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
 
-  def serialize(obj: T, output: OutputStream) {
-    val codedOut = CodedOutputStream.newInstance(output)
-    serializer.serialize(obj, codedOut)
-    codedOut.flush()
+  def serialize(obj: T, output: CodedOutputStream) {
+    serializer.serialize(obj, output)
+    output.flush()
   }
 }
 
 class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
 
-  def serialize(objs: Iterable[T], output: OutputStream) {
-    val codedOut = CodedOutputStream.newInstance(output)
+  def serialize(objs: Iterable[T], output: CodedOutputStream) {
     for (obj <- objs) {
-      serializer.serializeValue(obj, codedOut)
-      codedOut.flush()
+      serializer.serializeValue(obj, output)
+      output.flush()
     }
   }
 }
