@@ -30,7 +30,7 @@ class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
   }
 }
 
-private[macrobuf] class ReflectionMessageSerializer(message: Message) extends MessageFieldSerializer {
+private[macrobuf] class ReflectionMessageSerializer(message: MessageObject) extends MessageFieldSerializer {
 
   private class FieldAndSerializer(val field: Field, val serializer: FieldSerializer[Any])
 
@@ -53,12 +53,12 @@ private[macrobuf] class ReflectionMessageSerializer(message: Message) extends Me
   }
 
   private def serializerForField(f: Field) = (f match {
-    case f: Primitive if f.optional        => FieldSerializers.optional(serializerForPrimitive(f.actualType))
-    case f: Primitive if !f.optional       => serializerForPrimitive(f.actualType)
+    case f: OptionalPrimitive              => FieldSerializers.optional(serializerForPrimitive(f.actualType))
+    case f: RequiredPrimitive              => serializerForPrimitive(f.actualType)
     case f: RepeatedPrimitive if  f.packed => FieldSerializers.packedRepeated(serializerForPrimitive(f.actualType))
     case f: RepeatedPrimitive if !f.packed => FieldSerializers.repeated(serializerForPrimitive(f.actualType))
-    case f: EmbeddedMessage if f.optional  => FieldSerializers.optional(new ReflectionMessageSerializer(f))
-    case f: EmbeddedMessage if !f.optional => new ReflectionMessageSerializer(f)
+    case f: OptionalMessage                => FieldSerializers.optional(new ReflectionMessageSerializer(f))
+    case f: EmbeddedMessage                => new ReflectionMessageSerializer(f)
     case f: RepeatedMessage                => FieldSerializers.repeated(new ReflectionMessageSerializer(f))
   }).asInstanceOf[FieldSerializer[Any]]
 

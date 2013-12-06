@@ -25,7 +25,7 @@ class ListReflectionParser[T](tpe: Type) extends Parser[Seq[T]] {
   }
 }
 
-private[macrobuf] class ReflectionMessageParser(message: Message) extends MessageParser {
+private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends MessageParser {
 
   class FieldAndParser(val field: Field, val parser: FieldParser[Any])
 
@@ -84,16 +84,16 @@ private[macrobuf] class ReflectionMessageParser(message: Message) extends Messag
         val field = fieldAndParsersByNumber(e._1).field
         val rawValues: Seq[Any] = e._2
         val preparedValue = field match {
-          case f: Scalar if f.optional => {
+          case f: OptionalField => {
             require(rawValues.size <= 1, s"Multiple values for optional field ${f.fieldName}")
             rawValues.headOption
           }
-          case f: Scalar if !f.optional => {
+          case f: RequiredField => {
             require(rawValues.size <= 1, s"Multiple values for scalar field ${f.fieldName}")
             require(rawValues.size  > 0, s"No value provided for scalar field ${f.fieldName}")
             rawValues.head
           }
-          case f: Repeated => {
+          case f: RepeatedField => {
             rawValues
           }
         }

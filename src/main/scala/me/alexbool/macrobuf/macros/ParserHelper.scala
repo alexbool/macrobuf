@@ -57,7 +57,7 @@ private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
     case m: MessageField                     => parseDelimited(m, in)
   }
 
-  def parseMessage[T](m: Message, in: c.Expr[CodedInputStream]): c.Expr[T] = {
+  def parseMessage[T](m: MessageObject, in: c.Expr[CodedInputStream]): c.Expr[T] = {
     // 1. Declare vars
     // 2. Loop while !in.isAtEnd(): read tag, decode field number and type
     // 3. Pattern match on number
@@ -83,7 +83,7 @@ private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
     c.Expr(Block((varDefsStmts :+ loopTree) ++ checkAllRequiredFieldsAreProvidedStmts, constructMessageExpr.tree))
   }
 
-  def parseDelimited[T](m: Message, in: c.Expr[CodedInputStream]): c.Expr[T] = {
+  def parseDelimited[T](m: MessageObject, in: c.Expr[CodedInputStream]): c.Expr[T] = {
     val parseMessageExpr = parseMessage[T](m, in)
     reify {
       val size = in.splice.readRawVarint32()
@@ -111,12 +111,12 @@ private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
   private def declareVars(m: Message): Map[Field, ValDef] = {
     def varDefForField(f: Field): ValDef = {
       val tpt: Tree = f match {
-        case f: Scalar   => AppliedTypeTree(Ident(TypeName("Option")), List(TypeTree(f.actualType)))
-        case f: Repeated => AppliedTypeTree(Ident(TypeName("Seq")), List(TypeTree(f.actualType)))
+        case _: RequiredField | _: OptionalField => AppliedTypeTree(Ident(TypeName("Option")), List(TypeTree(f.actualType)))
+        case _: RepeatedField                    => AppliedTypeTree(Ident(TypeName("Seq")), List(TypeTree(f.actualType)))
       }
       val rhs: Tree = f match {
-        case f: Scalar   => reify { None  }.tree
-        case f: Repeated => reify { Seq() }.tree
+        case _: RequiredField | _: OptionalField => reify { None  }.tree
+        case f: RepeatedField                    => reify { Seq() }.tree
       }
       ValDef(Modifiers(Flag.MUTABLE), TermName(s"${f.fieldName}${f.number}"), tpt, rhs)
     }
@@ -133,27 +133,27 @@ private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
   private def readField(f: Field, readIntoVar: Ident, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Tree = {
     val parsedValue = parseField(f, tag, in)
     val fieldValue = f match {
-      case f: Scalar                        => reify { Some(parsedValue.splice) }
-      case f: RepeatedPrimitive if f.packed => reify { parsedValue.splice }
-      case f: Repeated                      => reify { c.Expr[Seq[_]](readIntoVar).splice :+ parsedValue.splice }
+      case _: RequiredField | _: OptionalField => reify { Some(parsedValue.splice) }
+      case f: RepeatedPrimitive if f.packed    => reify { parsedValue.splice }
+      case f: RepeatedField                    => reify { c.Expr[Seq[_]](readIntoVar).splice :+ parsedValue.splice }
     }
     Assign(readIntoVar, fieldValue.tree)
   }
 
   private def checkAllRequiredFieldsAreProvided(varDefs: Map[Field, ValDef]): List[Tree] = varDefs.to[List]
     .flatMap { fieldAndVar => fieldAndVar._1 match {
-        case f: Scalar if !f.optional => Some(reify {
+        case f: RequiredField => Some(reify {
           require(c.Expr[Option[_]](Ident(fieldAndVar._2.name)).splice.isDefined, "Field must be set")
         }.tree)
-        case _                        => None
+        case _ => None
       }
     }
 
-  private def constructMessage[T](m: Message, varDefs: Map[Field, ValDef]): c.Expr[T] = {
+  private def constructMessage[T](m: MessageObject, varDefs: Map[Field, ValDef]): c.Expr[T] = {
     val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
       fieldAndVarDef._1 match {
-        case f: Scalar if !f.optional => Select(Ident(fieldAndVarDef._2.name), TermName("get"))
-        case _                        => Ident(fieldAndVarDef._2.name)
+        case f: RequiredField => Select(Ident(fieldAndVarDef._2.name), TermName("get"))
+        case _                => Ident(fieldAndVarDef._2.name)
       }
     }
     c.Expr(Apply(Select(New(TypeTree(m.actualType)), nme.CONSTRUCTOR), args))

@@ -19,38 +19,34 @@ class MessageMetadataSpec extends WordSpec with Matchers {
     "construct tree for plain types" in {
       val rm = MessageMetadata.runtime[Message1]
       rm.messageName should be ("Message1")
-      rm.fields should have size (1)
+      rm.fields should have size 1
       rm.fields.head.number should be (1)
       rm.fields.head.fieldName should be ("number")
-      rm.fields.head.isInstanceOf[Primitive] should be (true)
-      rm.fields.head.asInstanceOf[Primitive].optional should be (false)
+      rm.fields.head.isInstanceOf[RequiredPrimitive] should be (true)
     }
     "construct tree for types with repeated fields" in {
       val rm = MessageMetadata.runtime[Message2]
       rm.messageName should be ("Message2")
-      rm.fields should have size (1)
+      rm.fields should have size 1
       rm.fields.head.number should be (1)
       rm.fields.head.isInstanceOf[RepeatedPrimitive] should be (true)
     }
     "construct tree for types with optional fields" in {
       val rm = MessageMetadata.runtime[Message3]
       rm.messageName should be ("Message3")
-      rm.fields should have size (2)
-      rm.fields.head.isInstanceOf[Primitive] should be (true)
-      rm.fields.head.asInstanceOf[Primitive].optional should be (false)
-      rm.fields(1).isInstanceOf[EmbeddedMessage] should be (true)
+      rm.fields should have size 2
+      rm.fields.head.isInstanceOf[RequiredPrimitive] should be (true)
+      rm.fields(1).isInstanceOf[OptionalMessage] should be (true)
       rm.fields(1).number should be (2)
-      rm.fields(1).asInstanceOf[EmbeddedMessage].optional should be (true)
-      rm.fields(1).asInstanceOf[EmbeddedMessage].messageName should be ("Message2")
+      rm.fields(1).asInstanceOf[OptionalMessage].messageName should be ("Message2")
     }
     "construct tree for types with repeated message fields" in {
       val rm = MessageMetadata.runtime[Message4]
       rm.messageName should be ("Message4")
-      rm.fields should have size (2)
+      rm.fields should have size 2
       rm.fields.head.number should be (1)
       rm.fields.head.fieldName should be ("name")
-      rm.fields.head.isInstanceOf[Primitive] should be (true)
-      rm.fields.head.asInstanceOf[Primitive].optional should be (true)
+      rm.fields.head.isInstanceOf[OptionalPrimitive] should be (true)
       rm.fields(1).isInstanceOf[RepeatedMessage] should be (true)
       rm.fields(1).number should be (2)
       rm.fields(1).asInstanceOf[RepeatedMessage].messageName should be ("Message1")
@@ -58,7 +54,6 @@ class MessageMetadataSpec extends WordSpec with Matchers {
     "construct tree for types with required embedded fields" in {
       val rm = MessageMetadata.runtime[Message5]
       rm.fields.head.isInstanceOf[EmbeddedMessage] should be (true)
-      rm.fields.head.asInstanceOf[EmbeddedMessage].optional should be (false)
     }
     "handle packed repeated fields" in {
       val rm = MessageMetadata.runtime[Message6]
