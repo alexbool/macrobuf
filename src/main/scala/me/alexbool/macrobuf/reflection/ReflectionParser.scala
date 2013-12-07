@@ -61,9 +61,10 @@ private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends 
 
   private def prepareArguments(fieldValuesByNumber: Seq[(Int, Any)]): Seq[Any] = {
     val allFieldNumbers = 1 to message.fields.size
-    val groupedFieldValues = fieldValuesByNumber
-      .groupBy(_._1)
-      .mapValues(_.map(_._2))
+    val groupedFieldValues: Map[Int, Seq[Any]] =
+      fieldValuesByNumber
+        .groupBy(_._1)
+        .mapValues(_.map(_._2))
 
     allFieldNumbers
       .map(n => (n, groupedFieldValues.getOrElse(n, Seq())))
