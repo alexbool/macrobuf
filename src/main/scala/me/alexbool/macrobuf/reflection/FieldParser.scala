@@ -13,31 +13,31 @@ trait ScalarFieldParser[T] extends FieldParser[T] {
 }
 
 object FieldParsers {
-  val IntParser = new ScalarFieldParser[Int] {
+  def intParser = new ScalarFieldParser[Int] {
     def parseOne(in: CodedInputStream) = in.readInt32()
   }
 
-  val LongParser = new ScalarFieldParser[Long] {
+  def longParser = new ScalarFieldParser[Long] {
     def parseOne(in: CodedInputStream) = in.readInt64()
   }
 
-  val ShortParser = new ScalarFieldParser[Short] {
+  def shortParser = new ScalarFieldParser[Short] {
     def parseOne(in: CodedInputStream) = in.readInt32().toShort
   }
 
-  val BooleanParser = new ScalarFieldParser[Boolean] {
+  def booleanParser = new ScalarFieldParser[Boolean] {
     def parseOne(in: CodedInputStream) = in.readBool()
   }
 
-  val FloatParser = new ScalarFieldParser[Float] {
+  def floatParser = new ScalarFieldParser[Float] {
     def parseOne(in: CodedInputStream) = in.readFloat()
   }
 
-  val DoubleParser = new ScalarFieldParser[Double] {
+  def doubleParser = new ScalarFieldParser[Double] {
     def parseOne(in: CodedInputStream) = in.readDouble()
   }
 
-  val StringParser = new ScalarFieldParser[String] {
+  def stringParser = new ScalarFieldParser[String] {
     def parseOne(in: CodedInputStream) = in.readString()
   }
 

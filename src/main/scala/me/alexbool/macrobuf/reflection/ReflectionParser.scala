@@ -36,13 +36,13 @@ private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends 
 
   private def parserForPrimitive(tpe: Type): ScalarFieldParser[Any] = {
     val parser: ScalarFieldParser[_] =
-      if      (tpe =:= IntTpe)          FieldParsers.IntParser
-      else if (tpe =:= LongTpe)         FieldParsers.LongParser
-      else if (tpe =:= ShortTpe)        FieldParsers.ShortParser
-      else if (tpe =:= BooleanTpe)      FieldParsers.BooleanParser
-      else if (tpe =:= FloatTpe)        FieldParsers.FloatParser
-      else if (tpe =:= DoubleTpe)       FieldParsers.DoubleParser
-      else if (tpe =:= typeOf[String])  FieldParsers.StringParser
+      if      (tpe =:= IntTpe)          FieldParsers.intParser
+      else if (tpe =:= LongTpe)         FieldParsers.longParser
+      else if (tpe =:= ShortTpe)        FieldParsers.shortParser
+      else if (tpe =:= BooleanTpe)      FieldParsers.booleanParser
+      else if (tpe =:= FloatTpe)        FieldParsers.floatParser
+      else if (tpe =:= DoubleTpe)       FieldParsers.doubleParser
+      else if (tpe =:= typeOf[String])  FieldParsers.stringParser
       else throw new IllegalArgumentException("Unknown primitive type")
     parser.asInstanceOf[ScalarFieldParser[Any]]
   }
