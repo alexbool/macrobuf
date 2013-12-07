@@ -2,7 +2,6 @@ package me.alexbool.macrobuf.reflection
 
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe.definitions._
-import java.io.InputStream
 import com.google.protobuf.{CodedInputStream, WireFormat}
 import me.alexbool.macrobuf.{MessageMetadata, Parser}
 import MessageMetadata.runtime._
