@@ -4,16 +4,44 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, Output
 import com.google.protobuf.{CodedInputStream, CodedOutputStream}
 
 trait Serializer[M] {
-  def serialize(obj: M, output: CodedOutputStream)
+  protected def doSerialize(obj: M, output: CodedOutputStream)
+  protected def size(obj: M): Int
 
   def serialize(obj: M, output: OutputStream) {
     serialize(obj, CodedOutputStream.newInstance(output))
+  }
+
+  def serialize(obj: M, output: CodedOutputStream) {
+    doSerialize(obj, output)
+    output.flush()
   }
 
   def serialize(obj: M): Array[Byte] = {
     val output = new ByteArrayOutputStream
     try {
       serialize(obj, output)
+      output.toByteArray
+    } finally {
+      output.close()
+    }
+  }
+
+  def serializeDelimited(objs: Iterable[M], output: CodedOutputStream) {
+    for (obj <- objs) {
+      output.writeInt32NoTag(size(obj))
+      doSerialize(obj, output)
+    }
+    output.flush()
+  }
+
+  def serializeDelimited(objs: Iterable[M], output: OutputStream) {
+    serializeDelimited(objs, CodedOutputStream.newInstance(output))
+  }
+
+  def serializeDelimited(objs: Iterable[M]): Array[Byte] = {
+    val output = new ByteArrayOutputStream
+    try {
+      serializeDelimited(objs, output)
       output.toByteArray
     } finally {
       output.close()

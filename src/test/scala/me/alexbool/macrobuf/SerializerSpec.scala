@@ -16,7 +16,6 @@ trait SerializerSpec extends WordSpec with Matchers {
   def serializerForMessage7: Serializer[Message7]
   def serializerForMessage8: Serializer[Message8]
   def serializerForMessage9: Serializer[Message9]
-  def listSerializerForMessage1: Serializer[Iterable[Message1]]
 
   name should {
     "serialize flat messages" in {
@@ -62,8 +61,8 @@ trait SerializerSpec extends WordSpec with Matchers {
       serializer.serialize(Message9(150, Seq(1, 2, 3))) should equal (Array(0x08, 0x96, 0x01, 0x12, 0x03, 0x01, 0x02, 0x03).map(_.toByte))
     }
     "serialize lists of messages using delimeted format" in {
-      val serializer = listSerializerForMessage1
-      serializer.serialize(Seq(Message1(150), Message1(0))) should equal (Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00).map(_.toByte))
+      val serializer = serializerForMessage1
+      serializer.serializeDelimited(Seq(Message1(150), Message1(0))) should equal (Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00).map(_.toByte))
     }
   }
 }

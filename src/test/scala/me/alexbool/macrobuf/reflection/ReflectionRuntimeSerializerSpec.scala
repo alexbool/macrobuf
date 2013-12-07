@@ -14,5 +14,4 @@ class ReflectionRuntimeSerializerSpec extends SerializerSpec {
   def serializerForMessage7 = Protobuf.serializerFromClass(classOf[Message7])
   def serializerForMessage8 = Protobuf.serializerFromClass(classOf[Message8])
   def serializerForMessage9 = Protobuf.serializerFromClass(classOf[Message9])
-  def listSerializerForMessage1 = Protobuf.listSerializerFromClass(classOf[Message1])
 }

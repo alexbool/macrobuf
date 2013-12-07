@@ -14,6 +14,5 @@ class MacroSerializerSpec extends SerializerSpec {
   def serializerForMessage7 = Protobuf.macroSerializer[Message7]
   def serializerForMessage8 = Protobuf.macroSerializer[Message8]
   def serializerForMessage9 = Protobuf.macroSerializer[Message9]
-  def listSerializerForMessage1 = Protobuf.listMacroSerializer[Message1]
 }
 

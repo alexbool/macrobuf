@@ -16,9 +16,9 @@ object Benchmark extends App {
       repeated = Stream.continually(Random.alphanumeric.take(32).mkString).take(Random.nextInt(100)).to[Seq],
       embedded = Stream.continually(Embedded(fieldOne = Random.nextInt(), fieldTwo = Random.nextLong())).take(Random.nextInt(100)).to[Seq])
 
-  def serialize[T](data: Seq[T], serializer: Serializer[Iterable[T]]) = {
+  def serialize[T](data: Seq[T], serializer: Serializer[T]) = {
     val start = System.currentTimeMillis
-    val serialized = serializer.serialize(data)
+    val serialized = serializer.serializeDelimited(data)
     val end = System.currentTimeMillis
     val duration = end - start
     println(f"Took $duration millis at ${serialized.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
@@ -38,8 +38,8 @@ object Benchmark extends App {
   println(s"Successfully generated ${data.size} items")
   println()
 
-  val reflectionSerializer = Protobuf.listSerializer[BenchmarkMessage]
-  val macroSerializer      = Protobuf.listMacroSerializer[BenchmarkMessage]
+  val reflectionSerializer = Protobuf.serializer[BenchmarkMessage]
+  val macroSerializer      = Protobuf.macroSerializer[BenchmarkMessage]
   val reflectionParser     = Protobuf.listParser[BenchmarkMessage]
   val macroParser          = Protobuf.listMacroParser[BenchmarkMessage]
 

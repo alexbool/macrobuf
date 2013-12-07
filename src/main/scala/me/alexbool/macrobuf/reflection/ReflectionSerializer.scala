@@ -3,7 +3,6 @@ package me.alexbool.macrobuf.reflection
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe.definitions._
 import scala.reflect.ClassTag
-import java.io.OutputStream
 import com.google.protobuf.CodedOutputStream
 import me.alexbool.macrobuf.{MessageMetadata, Serializer}
 import MessageMetadata.runtime._
@@ -11,21 +10,11 @@ import MessageMetadata.runtime._
 class ReflectionSerializer[T](tpe: Type) extends Serializer[T] {
   private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
 
-  def serialize(obj: T, output: CodedOutputStream) {
+  protected def doSerialize(obj: T, output: CodedOutputStream) {
     serializer.serialize(obj, output)
-    output.flush()
   }
-}
 
-class ListReflectionSerializer[T](tpe: Type) extends Serializer[Iterable[T]] {
-  private val serializer = new ReflectionMessageSerializer(MessageMetadata.runtime(tpe))
-
-  def serialize(objs: Iterable[T], output: CodedOutputStream) {
-    for (obj <- objs) {
-      serializer.serializeValue(obj, output)
-      output.flush()
-    }
-  }
+  protected def size(obj: T) = serializer.valueSize(obj)
 }
 
 private[macrobuf] class ReflectionMessageSerializer(message: MessageObject) extends MessageFieldSerializer {

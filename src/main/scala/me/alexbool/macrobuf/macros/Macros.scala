@@ -18,32 +18,10 @@ trait Macros extends WhiteboxMacro {
         c.Expr[CodedOutputStream](Ident(TermName("output"))))
         .map(_.tree),
         Literal(Constant(()))))
-
-    val resultingSerializer = reify {
-      new Serializer[T] {
-        def serialize(obj: T, output: CodedOutputStream) {
-          fs.splice
-          output.flush()
-        }
-      }
-    }
-    resultingSerializer
-  }
-
-  def listSerializer[T: c.WeakTypeTag]: c.Expr[Serializer[Iterable[T]]] = {
-    val tt = implicitly[c.WeakTypeTag[T]]
-    val helper = new SerializierHelper[c.type](c)
-    val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
-
-    val fs = c.Expr(
-      Block(helper.serializeMessage(rm, c.Expr[T](Ident(TermName("obj"))),
-        c.Expr[CodedOutputStream](Ident(TermName("output"))))
-        .map(_.tree),
-        Literal(Constant(()))))
     val ms = helper.messageSize(rm, c.Expr[T](Ident(TermName("obj"))))
 
     val resultingSerializer = reify {
-      new ListMacroSerializerBase[T] {
+      new Serializer[T] {
         protected def doSerialize(obj: T, output: CodedOutputStream) {
           fs.splice
         }
