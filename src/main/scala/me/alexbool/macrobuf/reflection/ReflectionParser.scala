@@ -57,11 +57,11 @@ private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends 
         seqOfValues.map(new ParsedValue(number, _))
       }
     }.to[Seq].flatten
-    val preparedArguments = prepareArguments(parsedValues)
+    val preparedArguments: Seq[Any] = prepareCtorArguments(parsedValues)
     ctorMirror(preparedArguments:_*)
   }
 
-  private def prepareArguments(fieldValuesByNumber: Seq[ParsedValue]): Seq[Any] = {
+  private def prepareCtorArguments(fieldValuesByNumber: Seq[ParsedValue]): Seq[Any] = {
     val allFieldNumbers = 1 to message.fields.size
     val groupedFieldValues: Map[Int, Seq[Any]] =
       fieldValuesByNumber
