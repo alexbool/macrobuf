@@ -17,6 +17,7 @@ class ReflectionParser[T](tpe: Type) extends Parser[T] {
 private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends MessageParser {
 
   class FieldAndParser(val field: Field, val parser: FieldParser[Any])
+  class ParsedValue(val number: Int, val value: Any)
 
   private val fieldAndParsersByNumber: Map[Int, FieldAndParser] =
     message.fields.map(f => (f.number, new FieldAndParser(f, parserForField(f)))).toMap
@@ -47,23 +48,25 @@ private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends 
   }
 
   def parseUntilLimit(in: CodedInputStream): Any = {
-    val fieldValuesByNumber = collection.mutable.ArrayBuffer[(Int, Any)]()
-    while (!in.isAtEnd) {
-      val number = WireFormat.getTagFieldNumber(in.readTag())
-      require(number > 0, "Unexpected end of input stream")
-      for (value <- fieldAndParsersByNumber(number).parser.parse(in))
-        fieldValuesByNumber += ((number, value))
-    }
-    val preparedArguments = prepareArguments(fieldValuesByNumber)
+    val parsedValues: Seq[ParsedValue] = new Iterator[Seq[ParsedValue]] {
+      def hasNext = !in.isAtEnd
+      def next() = {
+        val number = WireFormat.getTagFieldNumber(in.readTag())
+        require(number > 0, "Unexpected end of input stream")
+        val seqOfValues = fieldAndParsersByNumber(number).parser.parse(in)
+        seqOfValues.map(new ParsedValue(number, _))
+      }
+    }.to[Seq].flatten
+    val preparedArguments = prepareArguments(parsedValues)
     ctorMirror(preparedArguments:_*)
   }
 
-  private def prepareArguments(fieldValuesByNumber: Seq[(Int, Any)]): Seq[Any] = {
+  private def prepareArguments(fieldValuesByNumber: Seq[ParsedValue]): Seq[Any] = {
     val allFieldNumbers = 1 to message.fields.size
     val groupedFieldValues: Map[Int, Seq[Any]] =
       fieldValuesByNumber
-        .groupBy(_._1)
-        .mapValues(_.map(_._2))
+        .groupBy(_.number)
+        .mapValues(_.map(_.value))
 
     allFieldNumbers
       .map(n => (n, groupedFieldValues.getOrElse(n, Seq())))
