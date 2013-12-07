@@ -7,13 +7,13 @@ trait Serializer[M] {
   protected def doSerialize(obj: M, output: CodedOutputStream)
   protected def size(obj: M): Int
 
-  def serialize(obj: M, output: OutputStream) {
-    serialize(obj, CodedOutputStream.newInstance(output))
-  }
-
   def serialize(obj: M, output: CodedOutputStream) {
     doSerialize(obj, output)
     output.flush()
+  }
+
+  def serialize(obj: M, output: OutputStream) {
+    serialize(obj, CodedOutputStream.newInstance(output))
   }
 
   def serialize(obj: M): Array[Byte] = {
