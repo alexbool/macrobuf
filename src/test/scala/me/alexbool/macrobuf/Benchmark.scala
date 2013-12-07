@@ -25,9 +25,9 @@ object Benchmark extends App {
     serialized
   }
 
-  def parse[T](data: Array[Byte], parser: Parser[Seq[T]]) {
+  def parse[T](data: Array[Byte], parser: Parser[T]) {
     val start = System.currentTimeMillis
-    parser.parse(data)
+    parser.parseDelimited(data)
     val end = System.currentTimeMillis
     val duration = end - start
     println(f"Took $duration millis at ${data.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
@@ -40,8 +40,8 @@ object Benchmark extends App {
 
   val reflectionSerializer = Protobuf.serializer[BenchmarkMessage]
   val macroSerializer      = Protobuf.macroSerializer[BenchmarkMessage]
-  val reflectionParser     = Protobuf.listParser[BenchmarkMessage]
-  val macroParser          = Protobuf.listMacroParser[BenchmarkMessage]
+  val reflectionParser     = Protobuf.parser[BenchmarkMessage]
+  val macroParser          = Protobuf.macroParser[BenchmarkMessage]
 
   println("----Serialization----")
   println("Reflection")

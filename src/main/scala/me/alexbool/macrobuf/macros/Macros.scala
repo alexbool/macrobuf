@@ -40,23 +40,7 @@ trait Macros extends WhiteboxMacro {
 
     val resultingParser = reify {
       new Parser[T] {
-        def parse(input: CodedInputStream) = {
-          parseExpr.splice
-        }
-      }
-    }
-    resultingParser
-  }
-
-  def listParser[T: c.WeakTypeTag]: c.Expr[Parser[Seq[T]]] = {
-    val tt = implicitly[c.WeakTypeTag[T]]
-    val helper = new ParserHelper[c.type](c)
-    val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
-    val parseExpr = helper.parseDelimited[T](rm, c.Expr[CodedInputStream](Ident(TermName("input"))))
-
-    val resultingParser = reify {
-      new ListMacroParserBase[T] {
-        protected def parseLengthDelimited(input: CodedInputStream) = {
+        protected def doParseUntilLimit(input: CodedInputStream) = {
           parseExpr.splice
         }
       }

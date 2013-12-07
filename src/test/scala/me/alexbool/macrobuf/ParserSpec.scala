@@ -16,7 +16,6 @@ trait ParserSpec extends WordSpec with Matchers {
   def parserForMessage7: Parser[Message7]
   def parserForMessage8: Parser[Message8]
   def parserForMessage9: Parser[Message9]
-  def listParserForMessage1: Parser[Seq[Message1]]
 
   name should {
     "parse flat messages" in {
@@ -62,8 +61,8 @@ trait ParserSpec extends WordSpec with Matchers {
       parser.parse(Array(0x08, 0x96, 0x01, 0x12, 0x03, 0x01, 0x02, 0x03).map(_.toByte)) should equal (Message9(150, Seq(1, 2, 3)))
     }
     "parse lists of messages using delimeted format" in {
-      val parser = listParserForMessage1
-      parser.parse(Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00).map(_.toByte)) should equal (Seq(Message1(150), Message1(0)))
+      val parser = parserForMessage1
+      parser.parseDelimited(Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00).map(_.toByte)) should equal (Seq(Message1(150), Message1(0)))
     }
   }
 }

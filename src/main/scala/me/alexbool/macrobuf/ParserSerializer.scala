@@ -50,8 +50,9 @@ trait Serializer[M] {
 }
 
 trait Parser[M] {
-  def parse(input: CodedInputStream): M
+  protected def doParseUntilLimit(input: CodedInputStream): M
 
+  def parse(input: CodedInputStream): M = doParseUntilLimit(input)
   def parse(input: InputStream): M = parse(CodedInputStream.newInstance(input))
 
   def parse(data: Array[Byte]): M = {
@@ -60,6 +61,29 @@ trait Parser[M] {
       parse(input)
     } finally {
       input.close()
+    }
+  }
+
+  def parseDelimited(input: CodedInputStream): Seq[M] = new ParseLengthDelimitedIterator(input).to[Seq]
+  def parseDelimited(input: InputStream): Seq[M] = parseDelimited(CodedInputStream.newInstance(input))
+
+  def parseDelimited(data: Array[Byte]): Seq[M] = {
+    val input = new ByteArrayInputStream(data)
+    try {
+      parseDelimited(input)
+    } finally {
+      input.close()
+    }
+  }
+
+  private class ParseLengthDelimitedIterator(in: CodedInputStream) extends Iterator[M] {
+    def hasNext = !in.isAtEnd
+    def next() = {
+      val size = in.readRawVarint32()
+      val oldLimit = in.pushLimit(size)
+      val result = doParseUntilLimit(in)
+      in.popLimit(oldLimit)
+      result
     }
   }
 }
