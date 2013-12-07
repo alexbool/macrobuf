@@ -147,7 +147,7 @@ object FieldSerializers {
     }
 
     override def tagSize(number: Int) = underlying.tagSize(number)
-    def valueSize(value: Seq[T]) = value.map(underlying.valueSize(_)).sum
+    def valueSize(value: Seq[T]) = value.map(underlying.valueSize).sum
   }
 }
 
