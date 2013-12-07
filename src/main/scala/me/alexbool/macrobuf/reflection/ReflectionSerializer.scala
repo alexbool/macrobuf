@@ -51,13 +51,13 @@ private[macrobuf] class ReflectionMessageSerializer(message: MessageObject) exte
 
   private def serializerForPrimitive(tpe: Type) = {
     val serializer: FieldSerializer[_] =
-      if      (tpe =:= IntTpe)         FieldSerializers.IntSerializer
-      else if (tpe =:= LongTpe)        FieldSerializers.LongSerializer
-      else if (tpe =:= ShortTpe)       FieldSerializers.ShortSerializer
-      else if (tpe =:= BooleanTpe)     FieldSerializers.BooleanSerializer
-      else if (tpe =:= FloatTpe)       FieldSerializers.FloatSerializer
-      else if (tpe =:= DoubleTpe)      FieldSerializers.DoubleSerializer
-      else if (tpe =:= typeOf[String]) FieldSerializers.StringSerializer
+      if      (tpe =:= IntTpe)         FieldSerializers.intSerializer
+      else if (tpe =:= LongTpe)        FieldSerializers.longSerializer
+      else if (tpe =:= ShortTpe)       FieldSerializers.shortSerializer
+      else if (tpe =:= BooleanTpe)     FieldSerializers.booleanSerializer
+      else if (tpe =:= FloatTpe)       FieldSerializers.floatSerializer
+      else if (tpe =:= DoubleTpe)      FieldSerializers.doubleSerializer
+      else if (tpe =:= typeOf[String]) FieldSerializers.stringSerializer
       else throw new IllegalArgumentException("Unknown primitive type")
     serializer.asInstanceOf[FieldSerializer[Any]]
   }

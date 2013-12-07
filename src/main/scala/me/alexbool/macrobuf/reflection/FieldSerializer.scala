@@ -18,7 +18,7 @@ trait FieldSerializer[T] {
 
 object FieldSerializers {
 
-  val IntSerializer = new FieldSerializer[Int] {
+  def intSerializer = new FieldSerializer[Int] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_VARINT)
     }
@@ -30,7 +30,7 @@ object FieldSerializers {
     def valueSize(value: Int) = CodedOutputStream.computeInt32SizeNoTag(value)
   }
 
-  val LongSerializer = new FieldSerializer[Long] {
+  def longSerializer = new FieldSerializer[Long] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_VARINT)
     }
@@ -42,7 +42,7 @@ object FieldSerializers {
     def valueSize(value: Long) = CodedOutputStream.computeInt64SizeNoTag(value)
   }
 
-  val ShortSerializer = new FieldSerializer[Short] {
+  def shortSerializer = new FieldSerializer[Short] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_VARINT)
     }
@@ -54,7 +54,7 @@ object FieldSerializers {
     def valueSize(value: Short) = CodedOutputStream.computeInt32SizeNoTag(value)
   }
 
-  val BooleanSerializer = new FieldSerializer[Boolean] {
+  def booleanSerializer = new FieldSerializer[Boolean] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_VARINT)
     }
@@ -66,7 +66,7 @@ object FieldSerializers {
     def valueSize(value: Boolean) = CodedOutputStream.computeBoolSizeNoTag(value)
   }
 
-  val FloatSerializer = new FieldSerializer[Float] {
+  def floatSerializer = new FieldSerializer[Float] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_FIXED32)
     }
@@ -78,7 +78,7 @@ object FieldSerializers {
     def valueSize(value: Float) = CodedOutputStream.computeFloatSizeNoTag(value)
   }
 
-  val DoubleSerializer = new FieldSerializer[Double] {
+  def doubleSerializer = new FieldSerializer[Double] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_FIXED64)
     }
@@ -90,7 +90,7 @@ object FieldSerializers {
     def valueSize(value: Double) = CodedOutputStream.computeDoubleSizeNoTag(value)
   }
 
-  val StringSerializer = new FieldSerializer[String] {
+  def stringSerializer = new FieldSerializer[String] {
     def serializeTag(number: Int, out: CodedOutputStream) {
       out.writeTag(number, WIRETYPE_LENGTH_DELIMITED)
     }
