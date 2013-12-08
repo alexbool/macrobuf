@@ -4,6 +4,7 @@ import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe.definitions._
 import com.google.protobuf.{CodedInputStream, WireFormat}
 import me.alexbool.macrobuf.{MessageMetadata, Parser}
+import me.alexbool.macrobuf.util.ParseUntilLimitIterator
 import MessageMetadata.runtime._
 
 class ReflectionParser[T](tpe: Type) extends Parser[T] {
@@ -47,9 +48,9 @@ private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends 
     parser.asInstanceOf[ScalarFieldParser[Any]]
   }
 
-  def parseUntilLimit(in: CodedInputStream): Any = {
-    val parsedValues: Seq[ParsedValue] = new Iterator[Seq[ParsedValue]] {
-      def hasNext = !in.isAtEnd
+  def parseUntilLimit(input: CodedInputStream): Any = {
+    val parsedValues: Seq[ParsedValue] = new ParseUntilLimitIterator[Seq[ParsedValue]] {
+      def in = input
       def next() = {
         val number = WireFormat.getTagFieldNumber(in.readTag())
         require(number > 0, "Unexpected end of input stream")

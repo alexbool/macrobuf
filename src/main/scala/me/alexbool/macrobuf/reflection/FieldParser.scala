@@ -1,6 +1,7 @@
 package me.alexbool.macrobuf.reflection
 
 import com.google.protobuf.CodedInputStream
+import me.alexbool.macrobuf.util.ParseUntilLimitIterator
 
 trait FieldParser[T] {
   /** Possible several elements at at time, such as packed repeated fields */
@@ -45,7 +46,7 @@ object FieldParsers {
     def parse(in: CodedInputStream) = {
       val size = in.readRawVarint32()
       val oldLimit = in.pushLimit(size)
-      val result = new ParseUntilLimitIterator(in, underlying).to[Seq]
+      val result = new ParseMessageIterator(in, underlying).to[Seq]
       in.popLimit(oldLimit)
       result
     }
@@ -67,7 +68,7 @@ trait MessageParser extends ScalarFieldParser[Any] {
   def parseUntilLimit(in: CodedInputStream): Any
 }
 
-private[reflection] class ParseUntilLimitIterator[T](in: CodedInputStream, p: ScalarFieldParser[T]) extends Iterator[T] {
-  def hasNext = !in.isAtEnd
+private class ParseMessageIterator[T](protected override val in: CodedInputStream, p: ScalarFieldParser[T])
+  extends ParseUntilLimitIterator[T] {
   def next() = p.parseOne(in)
 }

@@ -99,8 +99,8 @@ private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
       ${requireWireFormat(tag, WIRETYPE_LENGTH_DELIMITED)}
       val length = $in.readRawVarint32()
       val oldLimit = $in.pushLimit(length)
-      val result = new Iterator[${f.actualType}] {
-        def hasNext = !$in.isAtEnd
+      val result = new me.alexbool.macrobuf.util.ParseUntilLimitIterator[${f.actualType}] {
+        def in = $in
         def next() = ${parsePrimitive(f.actualType, in)}
       }.to[Seq]
       $in.popLimit(oldLimit)

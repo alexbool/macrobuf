@@ -2,6 +2,7 @@ package me.alexbool.macrobuf
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream, OutputStream}
 import com.google.protobuf.{CodedInputStream, CodedOutputStream}
+import me.alexbool.macrobuf.util.ParseUntilLimitIterator
 
 trait Serializer[M] {
   protected def doSerialize(obj: M, output: CodedOutputStream)
@@ -76,8 +77,8 @@ trait Parser[M] {
     }
   }
 
-  private class ParseLengthDelimitedIterator(in: CodedInputStream) extends Iterator[M] {
-    def hasNext = !in.isAtEnd
+  private class ParseLengthDelimitedIterator(protected override val in: CodedInputStream)
+    extends ParseUntilLimitIterator[M] {
     def next() = {
       val size = in.readRawVarint32()
       val oldLimit = in.pushLimit(size)
