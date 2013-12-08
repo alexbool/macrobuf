@@ -45,7 +45,7 @@ trait ParserSpec extends WordSpec with Matchers {
     }
     "parse repeated embedded messages" in {
       val parser = parserForMessage6
-      parser.parse(Array(0x0a, 0x03, 0x08, 0x96, 0x01).map(_.toByte)) should equal (Message6(Seq(Message1(150))))
+      parser.parse(Array(0x0a, 0x03, 0x08, 0x96, 0x01, 0x0a, 0x02, 0x08, 0x00).map(_.toByte)) should equal (Message6(Seq(Message1(150), Message1(0))))
     }
     "parse optional embedded messages" in {
       val parser = parserForMessage7

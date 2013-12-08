@@ -45,7 +45,7 @@ trait SerializerSpec extends WordSpec with Matchers {
     }
     "serialize repeated embedded messages" in {
       val serializer = serializerForMessage6
-      serializer.serialize(Message6(Seq(Message1(150)))) should equal (Array(0x0a, 0x03, 0x08, 0x96, 0x01).map(_.toByte))
+      serializer.serialize(Message6(Seq(Message1(150), Message1(0)))) should equal (Array(0x0a, 0x03, 0x08, 0x96, 0x01, 0x0a, 0x02, 0x08, 0x00).map(_.toByte))
     }
     "serialize optional embedded messages" in {
       val serializer = serializerForMessage7
