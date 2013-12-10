@@ -21,48 +21,71 @@ trait SerializerSpec extends WordSpec with Matchers {
     "serialize flat messages" in {
       val serializer = serializerForMessage1
       // https://developers.google.com/protocol-buffers/docs/encoding#simple
-      serializer.serialize(Message1(150)) should equal (Array(0x08, 0x96, 0x01).map(_.toByte))
-      serializer.serialize(Message1(0)) should equal (Array(0x08, 0x00).map(_.toByte))
+      testSerialize(serializer, Message1(150), Array(0x08, 0x96, 0x01))
+      testSerialize(serializer, Message1(0), Array(0x08, 0x00))
     }
     "serialize messages with strings" in {
       val serializer = serializerForMessage2
       // https://developers.google.com/protocol-buffers/docs/encoding#types
-      serializer.serialize(Message2("testing")) should equal (Array(0x0a, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67).map(_.toByte))
+      testSerialize(serializer, Message2("testing"), Array(0x0a, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67))
     }
     "serialize messages with optional fields" in {
       val serializer = serializerForMessage3
       // https://developers.google.com/protocol-buffers/docs/encoding#optional
-      serializer.serialize(Message3(Some(150))) should equal (Array(0x08, 0x96, 0x01).map(_.toByte))
+      testSerialize(serializer, Message3(Some(150)), Array(0x08, 0x96, 0x01))
     }
     "serialize messages with repeated fields" in {
       val serializer = serializerForMessage4
       // https://developers.google.com/protocol-buffers/docs/encoding#optional
-      serializer.serialize(Message4(Seq(150, 0))) should equal (Array(0x08, 0x96, 0x01, 0x08, 0x00).map(_.toByte))
+      testSerialize(serializer, Message4(Seq(150, 0)), Array(0x08, 0x96, 0x01, 0x08, 0x00))
     }
     "serialize embedded messages" in {
       val serializer = serializerForMessage5
-      serializer.serialize(Message5(Message1(150))) should equal (Array(0x0a, 0x03, 0x08, 0x96, 0x01).map(_.toByte))
+      testSerialize(serializer, Message5(Message1(150)), Array(0x0a, 0x03, 0x08, 0x96, 0x01))
     }
     "serialize repeated embedded messages" in {
       val serializer = serializerForMessage6
-      serializer.serialize(Message6(Seq(Message1(150), Message1(0)))) should equal (Array(0x0a, 0x03, 0x08, 0x96, 0x01, 0x0a, 0x02, 0x08, 0x00).map(_.toByte))
+      testSerialize(
+        serializer,
+        Message6(Seq(Message1(150), Message1(0))),
+        Array(0x0a, 0x03, 0x08, 0x96, 0x01, 0x0a, 0x02, 0x08, 0x00)
+      )
     }
     "serialize optional embedded messages" in {
       val serializer = serializerForMessage7
-      serializer.serialize(Message7(Some(Message1(150)))) should equal (Array(0x0a, 0x03, 0x08, 0x96, 0x01).map(_.toByte))
-      serializer.serialize(Message7(None)) should equal (Array[Byte]())
+      testSerialize(serializer, Message7(Some(Message1(150))), Array(0x0a, 0x03, 0x08, 0x96, 0x01))
+      testSerialize(serializer, Message7(None),                Array[Int]())
     }
     "serialize messages with several fields" in {
       val serializer = serializerForMessage8
-      serializer.serialize(Message8(150, "testing")) should equal (Array(0x08, 0x96, 0x01, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67).map(_.toByte))
+      testSerialize(
+        serializer,
+        Message8(150, "testing"),
+        Array(0x08, 0x96, 0x01, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67)
+      )
     }
     "serialize messages with packed repeated fields" in {
       val serializer = serializerForMessage9
-      serializer.serialize(Message9(150, Seq(1, 2, 3))) should equal (Array(0x08, 0x96, 0x01, 0x12, 0x03, 0x01, 0x02, 0x03).map(_.toByte))
+      testSerialize(
+        serializer,
+        Message9(150, Seq(1, 2, 3)), Array(0x08, 0x96, 0x01, 0x12, 0x03, 0x01, 0x02, 0x03)
+      )
     }
     "serialize lists of messages using delimeted format" in {
       val serializer = serializerForMessage1
-      serializer.serializeDelimited(Seq(Message1(150), Message1(0))) should equal (Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00).map(_.toByte))
+      testSerializeDelimited(
+        serializer,
+        Seq(Message1(150), Message1(0)),
+        Array(0x03, 0x08, 0x96, 0x01, 0x02, 0x08, 0x00)
+      )
     }
+  }
+
+  private def testSerialize[T](serializer: Serializer[T], message: T, expectedResult: Array[Int]) {
+    serializer.serialize(message) should equal (expectedResult.map(_.toByte))
+  }
+
+  private def testSerializeDelimited[T](serializer: Serializer[T], messages: Seq[T], expectedResult: Array[Int]) {
+    serializer.serializeDelimited(messages) should equal (expectedResult.map(_.toByte))
   }
 }
