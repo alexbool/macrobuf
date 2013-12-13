@@ -54,7 +54,7 @@ trait ParserSpec extends WordSpec with Matchers {
     "parse optional embedded messages" in {
       val parser = parserForMessage7
       testParse(parser, Array(0x0a, 0x03, 0x08, 0x96, 0x01), Message7(Some(Message1(150))))
-      testParse(parser, Array[Int](), Message7(None))
+      testParse(parser, Array(), Message7(None))
     }
     "parse messages with several fields" in {
       val parser = parserForMessage8

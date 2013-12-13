@@ -54,7 +54,7 @@ trait SerializerSpec extends WordSpec with Matchers {
     "serialize optional embedded messages" in {
       val serializer = serializerForMessage7
       testSerialize(serializer, Message7(Some(Message1(150))), Array(0x0a, 0x03, 0x08, 0x96, 0x01))
-      testSerialize(serializer, Message7(None),                Array[Int]())
+      testSerialize(serializer, Message7(None),                Array())
     }
     "serialize messages with several fields" in {
       val serializer = serializerForMessage8
