@@ -43,17 +43,15 @@ object FieldParsers {
   }
 
   def packedRepeated[T](underlying: ScalarFieldParser[T]) = new FieldParser[T] {
-    def parse(in: CodedInputStream) = {
-      val size = in.readRawVarint32()
-      val oldLimit = in.pushLimit(size)
-      val result = new ParseMessageIterator(in, underlying).to[Seq]
-      in.popLimit(oldLimit)
+    def parse(input: CodedInputStream) = {
+      val size = input.readRawVarint32()
+      val oldLimit = input.pushLimit(size)
+      val result = new ParseUntilLimitIterator[T] {
+        protected def in = input
+        def next() = underlying.parseOne(input)
+      }.to[Seq]
+      input.popLimit(oldLimit)
       result
     }
   }
-}
-
-private class ParseMessageIterator[T](protected override val in: CodedInputStream, p: ScalarFieldParser[T])
-  extends ParseUntilLimitIterator[T] {
-  def next() = p.parseOne(in)
 }
