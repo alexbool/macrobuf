@@ -197,17 +197,17 @@ private[macros] class SerializierHelper[C <: WhiteboxContext](val c: C) {
           val mapper =
             Function(
               List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
-              messageSizeWithTag(f, c.Expr(Ident(TermName("m")))).tree
+              messageSizeWithTagAndSize(f, c.Expr(Ident(TermName("m")))).tree
             )
           val mappedOption = mapOption[Any, Int](fieldValue[Option[Any]](obj, f), c.Expr(mapper))
           reify { mappedOption.splice.getOrElse(0) }
       }
-      case f: EmbeddedMessage => messageSizeWithTag(f, fieldValue(obj, f))
+      case f: EmbeddedMessage => messageSizeWithTagAndSize(f, fieldValue(obj, f))
       case f: RepeatedMessage => {
         val mapper =
           Function(
             List(ValDef(Modifiers(Flag.PARAM), TermName("m"), Ident(f.actualType.typeSymbol), EmptyTree)),
-            messageSizeWithTag(f, c.Expr(Ident(TermName("m")))).tree
+            messageSizeWithTagAndSize(f, c.Expr(Ident(TermName("m")))).tree
           )
         sizeOfRepeated(fieldValue[Iterable[Any]](obj, f), c.Expr(mapper))
       }
@@ -215,11 +215,12 @@ private[macros] class SerializierHelper[C <: WhiteboxContext](val c: C) {
       .reduce((e1, e2) => reify { e1.splice + e2.splice })
   }
 
-  private def messageSizeWithTag(m: MessageField, obj: c.Expr[Any]): c.Expr[Int] = {
+  private def messageSizeWithTagAndSize(m: MessageField, obj: c.Expr[Any]): c.Expr[Int] = {
     val tagSize: c.Expr[Int] = sizeOfTag(toExpr(m.number))
     val msgSize: c.Expr[Int] = messageSize(m, obj)
     reify {
-      tagSize.splice + msgSize.splice
+      val messageSize = msgSize.splice
+      tagSize.splice + messageSize + CodedOutputStream.computeInt32SizeNoTag(messageSize)
     }
   }
 

@@ -25,12 +25,13 @@ object Benchmark extends App {
     serialized
   }
 
-  def parse[T](data: Array[Byte], parser: Parser[T]) {
+  def parse[T](data: Array[Byte], parser: Parser[T]): Seq[T] = {
     val start = System.currentTimeMillis
-    parser.parseDelimited(data)
+    val result = parser.parseDelimited(data)
     val end = System.currentTimeMillis
     val duration = end - start
     println(f"Took $duration millis at ${data.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
+    result
   }
 
   println("Generating data...")
@@ -53,7 +54,9 @@ object Benchmark extends App {
 
   println("-------Parsing-------")
   println("Reflection")
-  parse(serializedWithMacro, reflectionParser)
+  val parsedByReflection = parse(serializedWithMacro, reflectionParser)
+  require(data == parsedByReflection, "Data parsed by reflection parser must be the same as generated")
   println("Macro")
-  parse(serializedWithMacro, macroParser)
+  val parsedByMacro = parse(serializedWithMacro, macroParser)
+  require(data == parsedByMacro, "Data parsed by macro parser must be the same as generated")
 }

@@ -165,4 +165,9 @@ trait MessageFieldSerializer extends FieldSerializer[Any] {
     out.writeRawVarint32(valueSize(value))
     serialize(value, out)
   }
+
+  override def size(number: Int, value: Any) = {
+    val sizeOfValue = valueSize(value)
+    tagSize(number) + sizeOfValue + CodedOutputStream.computeInt32SizeNoTag(sizeOfValue)
+  }
 }
