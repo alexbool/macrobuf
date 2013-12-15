@@ -3,7 +3,7 @@ package me.alexbool.macrobuf.reflection
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.universe.definitions._
 import scala.reflect.ClassTag
-import com.google.protobuf.CodedOutputStream
+import com.google.protobuf.{CodedOutputStream, WireFormat}
 import me.alexbool.macrobuf.{MessageMetadata, Serializer}
 import MessageMetadata.runtime._
 
@@ -17,7 +17,7 @@ class ReflectionSerializer[T](tpe: Type) extends Serializer[T] {
   protected def size(obj: T) = serializer.valueSize(obj)
 }
 
-private[macrobuf] class ReflectionMessageSerializer(message: MessageObject) extends MessageFieldSerializer {
+private[macrobuf] class ReflectionMessageSerializer(message: MessageObject) extends FieldSerializer[Any] {
 
   private class FieldAndSerializer(val field: Field, val serializer: FieldSerializer[Any])
 
@@ -37,6 +37,20 @@ private[macrobuf] class ReflectionMessageSerializer(message: MessageObject) exte
   def valueSize(value: Any) = {
     val values = fieldValues(value)
     fieldSerializers.zip(values).map(fas => fas._1.serializer.size(fas._1.field.number, fas._2)).sum // XXX Oppa govnocode!
+  }
+
+  def serializeTag(number: Int, out: CodedOutputStream) {
+    out.writeTag(number, WireFormat.WIRETYPE_LENGTH_DELIMITED)
+  }
+
+  def serializeValue(value: Any, out: CodedOutputStream) {
+    out.writeRawVarint32(valueSize(value))
+    serialize(value, out)
+  }
+
+  override def size(number: Int, value: Any) = {
+    val sizeOfValue = valueSize(value)
+    tagSize(number) + sizeOfValue + CodedOutputStream.computeInt32SizeNoTag(sizeOfValue)
   }
 
   private def serializerForField(f: Field) = (f match {

@@ -150,24 +150,3 @@ object FieldSerializers {
     def valueSize(value: Seq[T]) = value.map(underlying.valueSize).sum
   }
 }
-
-trait MessageFieldSerializer extends FieldSerializer[Any] {
-  /**
-   * Actually serialize message
-   */
-  def serialize(value: Any, out: CodedOutputStream)
-
-  def serializeTag(number: Int, out: CodedOutputStream) {
-    out.writeTag(number, WIRETYPE_LENGTH_DELIMITED)
-  }
-
-  def serializeValue(value: Any, out: CodedOutputStream) {
-    out.writeRawVarint32(valueSize(value))
-    serialize(value, out)
-  }
-
-  override def size(number: Int, value: Any) = {
-    val sizeOfValue = valueSize(value)
-    tagSize(number) + sizeOfValue + CodedOutputStream.computeInt32SizeNoTag(sizeOfValue)
-  }
-}

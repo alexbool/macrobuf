@@ -53,21 +53,6 @@ object FieldParsers {
   }
 }
 
-trait MessageParser extends ScalarFieldParser[Any] {
-
-  /** Sets limit, then parses using parse(CodedInputStream). Use for embedded messages or length-delimited source */
-  def parseOne(in: CodedInputStream): Any = {
-    val size = in.readRawVarint32()
-    val oldLimit = in.pushLimit(size)
-    val result = parseUntilLimit(in)
-    in.popLimit(oldLimit)
-    result
-  }
-
-  /** Reads from stream until limit/EOF. Use for single root message per input stream */
-  def parseUntilLimit(in: CodedInputStream): Any
-}
-
 private class ParseMessageIterator[T](protected override val in: CodedInputStream, p: ScalarFieldParser[T])
   extends ParseUntilLimitIterator[T] {
   def next() = p.parseOne(in)

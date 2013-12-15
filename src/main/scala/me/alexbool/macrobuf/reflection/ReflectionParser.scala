@@ -15,7 +15,7 @@ class ReflectionParser[T](tpe: Type) extends Parser[T] {
   }
 }
 
-private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends MessageParser {
+private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends ScalarFieldParser[Any] {
 
   class FieldAndParser(val field: Field, val parser: FieldParser[Any])
   class ParsedValue(val number: Int, val value: Any)
@@ -48,6 +48,16 @@ private[macrobuf] class ReflectionMessageParser(message: MessageObject) extends 
     parser.asInstanceOf[ScalarFieldParser[Any]]
   }
 
+  /** Sets limit, then parses using parse(CodedInputStream). Use for embedded messages or length-delimited source */
+  def parseOne(in: CodedInputStream): Any = {
+    val size = in.readRawVarint32()
+    val oldLimit = in.pushLimit(size)
+    val result = parseUntilLimit(in)
+    in.popLimit(oldLimit)
+    result
+  }
+
+  /** Reads from stream until limit/EOF. Use for single root message per input stream */
   def parseUntilLimit(input: CodedInputStream): Any = {
     val parsedValues: Seq[ParsedValue] = new ParseUntilLimitIterator[Seq[ParsedValue]] {
       def in = input
