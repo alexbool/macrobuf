@@ -14,10 +14,14 @@ class Macros(val c: Context) {
     val rm: helper.mm.RootMessage = helper.mm.apply(tt.tpe)
 
     val fs = c.Expr(
-      Block(helper.serializeMessage(rm, c.Expr[T](Ident(TermName("obj"))),
-        c.Expr[CodedOutputStream](Ident(TermName("output"))))
-        .map(_.tree),
-        Literal(Constant(()))))
+      Block(
+        helper.serializeMessage(
+          rm,
+          c.Expr[T](Ident(TermName("obj"))),
+          c.Expr[CodedOutputStream](Ident(TermName("output")))
+        ).map(_.tree),
+      Literal(Constant(())))
+    )
     val ms = helper.messageSize(rm, c.Expr[T](Ident(TermName("obj"))))
 
     val resultingSerializer = reify {
