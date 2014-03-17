@@ -59,7 +59,7 @@ class MessageMetadataSpec extends WordSpec with Matchers {
       val rm = MessageMetadata.runtime[Message6]
       rm.fields.head.isInstanceOf[RepeatedPrimitive] should be (true)
       rm.fields.head.asInstanceOf[RepeatedPrimitive].packed should be (true)
-      evaluating { MessageMetadata.runtime[Message7] } should produce [IllegalArgumentException]
+      an [IllegalArgumentException] should be thrownBy { MessageMetadata.runtime[Message7] }
     }
   }
 }

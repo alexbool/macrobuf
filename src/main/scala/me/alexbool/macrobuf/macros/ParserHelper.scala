@@ -1,10 +1,10 @@
 package me.alexbool.macrobuf.macros
 
-import scala.reflect.macros.WhiteboxContext
+import scala.reflect.macros.whitebox.Context
 import me.alexbool.macrobuf.MessageMetadata
 import com.google.protobuf.{WireFormat, CodedInputStream}
 
-private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
+private[macros] class ParserHelper[C <: Context](val c: C) {
 
   val mm = MessageMetadata[c.universe.type](c.universe)
 
@@ -156,6 +156,6 @@ private[macros] class ParserHelper[C <: WhiteboxContext](val c: C) {
         case _                => Ident(fieldAndVarDef._2.name)
       }
     }
-    c.Expr(Apply(Select(New(TypeTree(m.actualType)), nme.CONSTRUCTOR), args))
+    c.Expr(Apply(Select(New(TypeTree(m.actualType)), termNames.CONSTRUCTOR), args))
   }
 }

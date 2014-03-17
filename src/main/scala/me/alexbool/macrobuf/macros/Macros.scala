@@ -1,10 +1,10 @@
 package me.alexbool.macrobuf.macros
 
-import scala.reflect.macros.WhiteboxMacro
+import scala.reflect.macros.whitebox.Context
 import me.alexbool.macrobuf._
 import com.google.protobuf.{CodedInputStream, CodedOutputStream}
 
-trait Macros extends WhiteboxMacro {
+class Macros(val c: Context) {
 
   import c.universe._
 

@@ -18,7 +18,7 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
   sealed trait Field extends Object {
     def number: Int
     def getter: Getter
-    def fieldName: String = getter.name.decoded
+    def fieldName: String = getter.name.decodedName.toString
     val thisType = getter.returnType
   }
 
@@ -43,8 +43,8 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
 
   sealed trait Message extends MessageOrPrimitive { this: Object =>
     def fields: Seq[Field]
-    def messageName: String = actualType.typeSymbol.name.decoded
-    def ctor: MethodSymbol = actualType.declaration(nme.CONSTRUCTOR).asMethod
+    def messageName: String = actualType.typeSymbol.name.decodedName.toString
+    def ctor: MethodSymbol = actualType.decl(termNames.CONSTRUCTOR).asMethod
   }
 
   sealed trait Primitive extends MessageOrPrimitive {
@@ -73,7 +73,7 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
 
   // Factories
   def apply[T](implicit tt: WeakTypeTag[T]): RootMessage = apply(tt.tpe)
-  def apply(tpe: Type): RootMessage = RootMessage(tpe.typeSymbol.name.decoded, fieldsFor(tpe), tpe)
+  def apply(tpe: Type): RootMessage = RootMessage(tpe.typeSymbol.name.decodedName.toString, fieldsFor(tpe), tpe)
 
   // Utilities
   private def firstTypeArgument(tpe: Type): Type = typeArguments(tpe).head
@@ -106,10 +106,10 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
   private def isStrictlyPrimitive(tpe: Type): Boolean = tpe <:< AnyValTpe
 
   private def isPacked(getter: Getter): Boolean =
-    getter.annotations.find(_.tpe =:= typeOf[packed]).map(_.scalaArgs.head match {
-      case Literal(Constant(isPacked: Boolean))                  => isPacked
-      case Select(_, term) if term.decoded == "<init>$default$1" => true // XXX Bad hack!
-      case _                                                     => throw new IllegalArgumentException("Illegal annotation parameter")
+    getter.annotations.find(_.tree.tpe =:= typeOf[packed]).map(_.tree.children.tail.head match {
+      case Literal(Constant(isPacked: Boolean))                               => isPacked
+      case Select(_, term) if term.decodedName.toString == "<init>$default$1" => true // XXX Bad hack!
+      case _                                                                  => throw new IllegalArgumentException("Illegal annotation parameter")
     }).getOrElse(false)
 }
 
