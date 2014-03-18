@@ -24,6 +24,7 @@ object Benchmark extends App {
     val end = System.currentTimeMillis
     val duration = end - start
     println(f"Took $duration millis at ${serialized.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
+    doGcWithoutWarnings()
     serialized
   }
 
@@ -33,7 +34,14 @@ object Benchmark extends App {
     val end = System.currentTimeMillis
     val duration = end - start
     println(f"Took $duration millis at ${data.size.toDouble / 1024 / (duration.toDouble / 1000)}%.2f k/s")
+    doGcWithoutWarnings()
     result
+  }
+
+  def doGcWithoutWarnings() {
+    GarbageCollectorLogger.disableGcLogging()
+    System.gc()
+    GarbageCollectorLogger.enableGcLoggingToStdout()
   }
 
   println("Generating data...")
@@ -69,6 +77,7 @@ object Benchmark extends App {
     }
   )
 
+  System.gc()
   GarbageCollectorLogger.enableGcLoggingToStdout()
 
   println("----Serialization----")

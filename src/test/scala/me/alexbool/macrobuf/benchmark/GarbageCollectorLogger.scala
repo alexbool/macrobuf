@@ -19,4 +19,11 @@ object GarbageCollectorLogger {
     val mBeans: Seq[GarbageCollectorMXBean] = java.lang.management.ManagementFactory.getGarbageCollectorMXBeans
     mBeans.foreach(b => b.asInstanceOf[NotificationEmitter].addNotificationListener(notificationListener, null, null))
   }
+
+  def disableGcLogging() {
+    java.lang.management.ManagementFactory
+      .getGarbageCollectorMXBeans
+      .map(_.asInstanceOf[NotificationEmitter])
+      .foreach(_.removeNotificationListener(notificationListener))
+  }
 }
