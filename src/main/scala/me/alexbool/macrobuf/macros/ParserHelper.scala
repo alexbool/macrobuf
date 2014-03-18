@@ -3,7 +3,6 @@ package me.alexbool.macrobuf.macros
 import scala.reflect.macros.whitebox.Context
 import me.alexbool.macrobuf.MessageMetadata
 import com.google.protobuf.{WireFormat, CodedInputStream}
-import scala.collection.mutable.ArrayBuffer
 
 private[macros] class ParserHelper[C <: Context](val c: C) {
 
