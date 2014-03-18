@@ -49,6 +49,7 @@ class Macros(val c: Context) {
         }
       }
     }
+    System.out.println(showCode(resultingParser.tree))
     resultingParser
   }
 }

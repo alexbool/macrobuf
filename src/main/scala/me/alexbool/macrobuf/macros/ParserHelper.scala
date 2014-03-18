@@ -6,7 +6,7 @@ import com.google.protobuf.{WireFormat, CodedInputStream}
 
 private[macros] class ParserHelper[C <: Context](val c: C) {
 
-  val mm = MessageMetadata[c.universe.type](c.universe)
+  val mm = MessageMetadata(c.universe)
 
   import c.universe._
   import mm._

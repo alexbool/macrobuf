@@ -6,7 +6,7 @@ import me.alexbool.macrobuf.MessageMetadata
 
 private[macros] class SerializierHelper[C <: Context](val c: C) {
 
-  val mm = MessageMetadata[c.universe.type](c.universe)
+  val mm = MessageMetadata(c.universe)
 
   import c.universe._
   import mm._
