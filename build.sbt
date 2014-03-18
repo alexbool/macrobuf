@@ -19,3 +19,5 @@ org.scalastyle.sbt.ScalastylePlugin.Settings
 fork := true
 
 incOptions := incOptions.value.withNameHashing(true)
+
+javaOptions in run += "-Xmx4G"

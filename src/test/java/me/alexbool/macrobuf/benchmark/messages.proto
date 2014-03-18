@@ -1,0 +1,13 @@
+package me.alexbool.macrobuf.benchmark;
+
+message BenchmarkMessage {
+    required int32 number = 1;
+    optional int64 optional = 2;
+    repeated string repeated = 3;
+    repeated Embedded embedded = 4;
+}
+
+message Embedded {
+    required int32 field_one = 1;
+    required int64 field_two = 2;
+}
