@@ -112,11 +112,11 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   private def declareVars(m: Message): Map[Field, ValDef] = {
     def varDefForField(f: Field): ValDef = {
       val tpt: Tree = f match {
-        case _: RequiredField | _: OptionalField => AppliedTypeTree(Ident(TypeName("Option")), List(TypeTree(f.actualType)))
+        case _: RequiredField | _: OptionalField => tq"Option[${f.actualType}]"
         case _: RepeatedField                    => tq"scala.collection.mutable.ArrayBuffer[${f.actualType}]"
       }
       val rhs: Tree = f match {
-        case _: RequiredField | _: OptionalField => reify { None  }.tree
+        case _: RequiredField | _: OptionalField => q"None"
         case f: RepeatedField                    => q"new scala.collection.mutable.ArrayBuffer[${f.actualType}]()"
       }
       ValDef(Modifiers(Flag.MUTABLE), TermName(s"${f.fieldName}${f.number}"), tpt, rhs)
@@ -134,13 +134,13 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   private def readField(f: Field, readIntoVar: Ident, tag: c.Expr[Int], in: c.Expr[CodedInputStream]): Tree = {
     val parsedValue = parseField(f, tag, in)
     val fieldValue = f match {
-      case _: RequiredField | _: OptionalField => reify { Some(parsedValue.splice) }
-      case f: RepeatedField                    => reify { parsedValue.splice }
+      case _: RequiredField | _: OptionalField => q"Some($parsedValue)"
+      case f: RepeatedField                    => q"$parsedValue"
     }
     f match {
       case f: RepeatedPrimitive if f.packed => q"$readIntoVar ++= $fieldValue"
       case f: RepeatedField                 => q"$readIntoVar += $fieldValue"
-      case _                                => Assign(readIntoVar, fieldValue.tree)
+      case _                                => q"$readIntoVar = $fieldValue"
     }
   }
 
