@@ -3,6 +3,7 @@ package me.alexbool.macrobuf.macros
 import scala.reflect.macros.whitebox.Context
 import me.alexbool.macrobuf.MessageMetadata
 import com.google.protobuf.{WireFormat, CodedInputStream}
+import scala.collection.mutable.ArrayBuffer
 
 private[macros] class ParserHelper[C <: Context](val c: C) {
 
@@ -112,11 +113,11 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     def varDefForField(f: Field): ValDef = {
       val tpt: Tree = f match {
         case _: RequiredField | _: OptionalField => AppliedTypeTree(Ident(TypeName("Option")), List(TypeTree(f.actualType)))
-        case _: RepeatedField                    => AppliedTypeTree(Ident(TypeName("Seq")), List(TypeTree(f.actualType)))
+        case _: RepeatedField                    => tq"scala.collection.mutable.ArrayBuffer[${f.actualType}]"
       }
       val rhs: Tree = f match {
         case _: RequiredField | _: OptionalField => reify { None  }.tree
-        case f: RepeatedField                    => reify { Seq() }.tree
+        case f: RepeatedField                    => q"new scala.collection.mutable.ArrayBuffer[${f.actualType}]()"
       }
       ValDef(Modifiers(Flag.MUTABLE), TermName(s"${f.fieldName}${f.number}"), tpt, rhs)
     }
@@ -134,10 +135,13 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
     val parsedValue = parseField(f, tag, in)
     val fieldValue = f match {
       case _: RequiredField | _: OptionalField => reify { Some(parsedValue.splice) }
-      case f: RepeatedPrimitive if f.packed    => reify { parsedValue.splice }
-      case f: RepeatedField                    => reify { c.Expr[Seq[_]](readIntoVar).splice :+ parsedValue.splice }
+      case f: RepeatedField                    => reify { parsedValue.splice }
     }
-    Assign(readIntoVar, fieldValue.tree)
+    f match {
+      case f: RepeatedPrimitive if f.packed => q"$readIntoVar ++= $fieldValue"
+      case f: RepeatedField                 => q"$readIntoVar += $fieldValue"
+      case _                                => Assign(readIntoVar, fieldValue.tree)
+    }
   }
 
   private def checkAllRequiredFieldsAreProvided(varDefs: Map[Field, ValDef]): List[Tree] = varDefs.to[List]
@@ -152,6 +156,7 @@ private[macros] class ParserHelper[C <: Context](val c: C) {
   private def constructMessage[T](m: MessageObject, varDefs: Map[Field, ValDef]): c.Expr[T] = {
     val args = varDefs.to[List].sortBy(_._1.number).map { fieldAndVarDef =>
       fieldAndVarDef._1 match {
+        case f: RepeatedField => q"${fieldAndVarDef._2.name}.to[Seq]"
         case f: RequiredField => Select(Ident(fieldAndVarDef._2.name), TermName("get"))
         case _                => Ident(fieldAndVarDef._2.name)
       }
