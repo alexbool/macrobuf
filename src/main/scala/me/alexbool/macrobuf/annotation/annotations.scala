@@ -6,6 +6,6 @@ import scala.annotation.meta.getter
 // scalastyle:off class.name
 
 @getter
-final class packed(val value: Boolean = true) extends StaticAnnotation
+final class packed extends StaticAnnotation
 
 // scalastyle:on class.name

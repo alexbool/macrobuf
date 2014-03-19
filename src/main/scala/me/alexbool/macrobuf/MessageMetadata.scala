@@ -105,12 +105,7 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
   private def isPrimitive(tpe: Type): Boolean = isStrictlyPrimitive(tpe) || tpe <:< typeOf[String]
   private def isStrictlyPrimitive(tpe: Type): Boolean = tpe <:< AnyValTpe
 
-  private def isPacked(getter: Getter): Boolean =
-    getter.annotations.find(_.tree.tpe =:= typeOf[packed]).map(_.tree.children.tail.head match {
-      case Literal(Constant(isPacked: Boolean))                               => isPacked
-      case Select(_, term) if term.decodedName.toString == "<init>$default$1" => true // XXX Bad hack!
-      case _                                                                  => throw new IllegalArgumentException("Illegal annotation parameter")
-    }).getOrElse(false)
+  private def isPacked(getter: Getter): Boolean = getter.annotations.exists(_.tree.tpe =:= typeOf[packed])
 }
 
 object MessageMetadata {
