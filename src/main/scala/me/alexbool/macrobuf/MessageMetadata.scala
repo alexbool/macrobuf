@@ -110,5 +110,5 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
 
 object MessageMetadata {
   def apply[U <: Universe](u: U) = new MessageMetadata[u.type](u)
-  val runtime = MessageMetadata[scala.reflect.runtime.universe.type](scala.reflect.runtime.universe)
+  val runtime = MessageMetadata(scala.reflect.runtime.universe)
 }
