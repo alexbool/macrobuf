@@ -76,9 +76,7 @@ private[macrobuf] class MessageMetadata[U <: Universe](val u: U) {
   def apply(tpe: Type): RootMessage = RootMessage(tpe.typeSymbol.name.decodedName.toString, fieldsFor(tpe), tpe)
 
   // Utilities
-  private def firstTypeArgument(tpe: Type): Type = typeArguments(tpe).head
-
-  private def typeArguments(tpe: Type) = tpe.asInstanceOf[TypeRefApi].args
+  private def firstTypeArgument(tpe: Type): Type = tpe.typeArgs.head
 
   private def fieldsFor(tpe: Type): Seq[Field] = {
     val numbers = Stream from 1
