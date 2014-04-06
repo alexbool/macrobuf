@@ -4,12 +4,12 @@ organization := "me.alexbool"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion := "2.11.0-RC1"
+scalaVersion := "2.11.0-RC3"
 
 libraryDependencies ++= Seq(
-    "org.scala-lang"      %  "scala-reflect" % "2.11.0-RC1",
+    "org.scala-lang"      %  "scala-reflect" % "2.11.0-RC3",
     "com.google.protobuf" %  "protobuf-java" % "2.5.0",
-    "org.scalatest"       %% "scalatest"     % "2.1.0" % "test"
+    "org.scalatest"       %% "scalatest"     % "2.1.2" % "test"
 )
 
 scalacOptions ++= Seq("-feature", "-deprecation")
